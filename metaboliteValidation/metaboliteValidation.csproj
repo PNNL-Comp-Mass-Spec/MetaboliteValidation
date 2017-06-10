@@ -46,6 +46,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DelimitedFileParser.cs" />
+    <Compile Include="GithubApi\CreateFileParams.cs" />
+    <Compile Include="GithubApi\FileContent.cs" />
+    <Compile Include="GithubApi\FileInfo.cs" />
+    <Compile Include="GithubApi\Github.cs" />
+    <Compile Include="GithubApi\Links.cs" />
+    <Compile Include="GithubApi\TreeResponse.cs" />
+    <Compile Include="GithubApi\UploadFileParams.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PubchemUtil.cs" />
