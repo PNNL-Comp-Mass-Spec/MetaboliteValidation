@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26430.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "metaboliteValidation", "metaboliteValidation\metaboliteValidation.csproj", "{7BC96112-7C54-403A-9E55-D0CEBCD5B5D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestMetaboliteValidation", "UnitTestMetaboliteValidation\UnitTestMetaboliteValidation.csproj", "{CDC4FB60-1EF4-42E7-8ACF-837E3CCB3531}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{7BC96112-7C54-403A-9E55-D0CEBCD5B5D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7BC96112-7C54-403A-9E55-D0CEBCD5B5D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7BC96112-7C54-403A-9E55-D0CEBCD5B5D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDC4FB60-1EF4-42E7-8ACF-837E3CCB3531}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDC4FB60-1EF4-42E7-8ACF-837E3CCB3531}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDC4FB60-1EF4-42E7-8ACF-837E3CCB3531}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDC4FB60-1EF4-42E7-8ACF-837E3CCB3531}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
