@@ -21,12 +21,23 @@ namespace metaboliteValidation
             
             
         }
-
+        /**
+         * <summary>This function will parse a dilimited string</summary>
+         * <param name="content">The delimited string</param>
+         * <param name="delimiter">The character used for dilimiting the string</param>
+         * <param name="header">Boolean if the first row is a header</param>
+         */
         public void ParseString(string content, char delimiter = ',', bool header = true)
         {
             this._delimiter = delimiter;
             Parse(content, delimiter, header);
         }
+        /**
+         * <summary>This function will parse a dilimited file by reading the file to a string</summary>
+         * <param name="content">The path to the delimited file</param>
+         * <param name="delimiter">The character used for dilimiting the string</param>
+         * <param name="header">Boolean if the first row is a header</param>
+         */
         public void ParseFile(string fileName, char delimiter = ',', bool header = true)
         {
             // find file
@@ -38,6 +49,12 @@ namespace metaboliteValidation
             string content = File.ReadAllText(fileName);
             Parse(content, delimiter, header);
         }
+        /**
+         * <summary>Private function will parse a dilimited string</summary>
+         * <param name="content">The delimited string</param>
+         * <param name="delimiter">The character used for dilimiting the string</param>
+         * <param name="header">Boolean if the first row is a header</param>
+         */
         private void Parse(string content, char delimiter, bool header)
         {
             // remove return carrage symbol
@@ -132,7 +149,12 @@ namespace metaboliteValidation
         {
             return _full;
         }
-
+        /**
+         * <summary>This function will compare two string arrays presuming they are the headers</summary>
+         * <param name="a">The left side of the compare</param>
+         * <param name="b">The right side of the compare</param>
+         * <returns>If the two string arrays are the same returns true, false otherwise.</returns>
+         */
         private bool CompareHeaders(string[] a, string[] b)
         {
             if (a.Length != b.Length)
@@ -146,7 +168,11 @@ namespace metaboliteValidation
             }
             return true;
         }
-        public void Concat(DelimitedFileParser a)
+        /**
+         * <summary>This function will append a DelimitedFileParser to the end of this class</summary>
+         * <param name="a">The DelimietedFileParser to add to this class</param>
+         */
+        public bool Concat(DelimitedFileParser a)
         {
             if (CompareHeaders(a.GetHeaders(), _headers))
             {
@@ -161,9 +187,14 @@ namespace metaboliteValidation
                     replacement[i + j] = a.GetRows()[j];
                 }
                 _full = replacement;
+                return true;
             }
-            
+            return false;            
         }
+        /**
+         * <summary>Converts to a dilimited string using the provided delimiter</summary>
+         * <returns>A dilimited string</returns>
+         */
         public override string ToString()
         {
             var result = "";
@@ -171,7 +202,7 @@ namespace metaboliteValidation
             foreach (var head in _headers)
             {
                 if (!firstHead)
-                    result += "\t";
+                    result += _delimiter;
                 firstHead = false;
                 result += head;
             }
@@ -184,10 +215,57 @@ namespace metaboliteValidation
                 foreach (var col in row)
                 {
                     if (!firstCol)
-                        result += "\t";
+                        result += _delimiter;
                     firstCol = false;
                     result += col;
                 }
+            }
+            return result;
+        }
+        /// <summary>
+        /// Agelent formated
+        /// </summary>
+        /// <returns>A string of the data formated for agelent software.</returns>
+        public string PrintAgelent()
+        {
+            var headers = "###Formula\tMass\tCompound name\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n"
+                          + "#Formula\tMass\tCpd\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n";
+            string result = headers;
+            var adduct = new Dictionary<string, Dictionary<string, string>>()
+            {
+                { "mPlusHCCS", new Dictionary<string, string>(){
+                    {"polarity","positive"},
+                    {"display","(M+H)+"}
+                }},
+                {"mPlusNaCCS", new Dictionary<string, string>(){
+                    { "polarity","positive"},
+                    {"display","(M+Na)+"}
+                }},
+                {"mMinusHCCS", new Dictionary<string, string>(){
+                    {"polarity","negative"},
+                    { "display","(M-H)-"}
+                }},
+                {"mPlusDotCCS", new Dictionary<string, string>(){
+                    { "polarity","positive"},
+                    {"display","(M)+"}
+                }}
+            };
+            foreach (var row in _full)
+            {
+                var tempStr = row[_headerInverse["formula"]]+"\t"
+                    + row[_headerInverse["mass"]] + "\t"
+                    + row[_headerInverse["Neutral Name"]] + "\t"
+                         + row[_headerInverse["kegg"]] + "\t"
+                         + row[_headerInverse["cas"]];
+                foreach (var key in adduct.Keys)
+                {
+                    if (!String.IsNullOrEmpty(row[_headerInverse[key]]) && !row[_headerInverse[key]].Equals("N/A"))
+                    {
+                        result += tempStr + "\t" + adduct[key]["polarity"] + "\t" + adduct[key]["display"] + "\t" +
+                                  row[_headerInverse[key]]+"\t\tN2\t\t\n";
+                    }  
+                }
+                
             }
             return result;
         }
