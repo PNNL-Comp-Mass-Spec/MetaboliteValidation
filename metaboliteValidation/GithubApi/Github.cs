@@ -46,10 +46,19 @@ namespace metaboliteValidation.GithubApi
                 GetUserPass();
             }
             var uri = GetUriForContent(Repo, Owner, path);
-            var json = GetJson(uri);
-            json.Wait();
-            var fileContents = JsonConvert.DeserializeObject<FileContent>(json.Result);
-            return fileContents.GetContent();
+            try
+            {
+                var json = GetJson(uri);
+                json.Wait();
+                var fileContents = JsonConvert.DeserializeObject<FileContent>(json.Result);
+                return fileContents.GetContent();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error occured when sending file to github.");
+            }
+            return null;
+           
         }
         /**
          *  <summary>This function uses the console to collect the username and password for github from the user</summary>
@@ -142,7 +151,7 @@ namespace metaboliteValidation.GithubApi
             }
             catch (Exception e)
             {
-                Environment.Exit(1);
+                Console.WriteLine("Error occured when getting information from github.");
             }
             return null;
         }
@@ -299,6 +308,7 @@ namespace metaboliteValidation.GithubApi
                             {
                                 Console.WriteLine("Unauthorized, username, password is incorrect or you don't have access to this repository.");
                             }
+
                         }
                         return resp.Content.ReadAsStringAsync().Result;
                     }

@@ -8,6 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Globalization;
+using System.Net.Http;
+using Newtonsoft.Json;
+using System.Net;
+using metaboliteValidation.GoodTableResponse;
 
 namespace metaboliteValidation
 {
@@ -60,6 +64,7 @@ namespace metaboliteValidation
             var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec");
             // get main data file from github 
             var dataFile = github.GetFile("data/metabolitedata.tsv");
+            if (dataFile == null) Environment.Exit(1);
             // strings to run good tables in the command line
             string userDirPath = Environment.GetEnvironmentVariable("goodtables_path");
             string commandLine = $"schema \"{args[0]}\" --schema \"{SchemaUrl}\"";
@@ -70,38 +75,42 @@ namespace metaboliteValidation
             // parse the new data to append to current data
             DelimitedFileParser fileToAppend = new DelimitedFileParser();
             fileToAppend.ParseFile(args[0], '\t');
+            // this will add the new data tsv to the existing tsv downloaded from github
+            mainFile.Concat(fileToAppend);
+            GoodTables goodtables = new GoodTables(mainFile.ToString(), SchemaUrl);
+            if (goodtables.Response.success) { }
             // start command line process for goodtables
-            CommandLineProcess pro = new CommandLineProcess(goodtablesPath, commandLine);
-            // if error display errors and exit
-            if (pro.Status.Equals(CommandLineProcess.StatusCode.Error))
-            {
-                Console.WriteLine($"GoodTables Validation error\n\n{pro.StandardOut}{pro.StandardError}\nExiting program please check that the data is valid.");
-                Console.ReadKey();
-                Environment.Exit(1);
-            }
-            // if the goodtables.exe file isn't found display message and exit
-            else if (pro.Status.Equals(CommandLineProcess.StatusCode.FileNotFound))
-            {
-                Console.WriteLine("File not found. Please make sure you have installed python and goodtables.\n"
-                    +"Check that the folder path for goodtables.exe is added to an environment variable named GOODTABLES_PATH.\n"
-                    +"Press any key to continue.");
-                Console.ReadKey();
-                Environment.Exit(1);
-            }
-            else
-            {
-                Console.WriteLine($"GoodTables validation\n\n{pro.StandardOut}");
-                // this will add the new data tsv to the existing tsv downloaded from github
-                mainFile.Concat(fileToAppend);
-                // This will send the completed tsv back to github
-                github.SendFileAsync(mainFile.ToString(), "data/metabolitedata.tsv");
-                // create agelent file
-                // send agelent file to github
-                github.SendFileAsync(mainFile.PrintAgelent(), "data/metabolitedataAgilent.tsv");
-            }
-            
+            //CommandLineProcess pro = new CommandLineProcess(goodtablesPath, commandLine);
+            //// if error display errors and exit
+            //if (pro.Status.Equals(CommandLineProcess.StatusCode.Error))
+            //{
+            //    Console.WriteLine($"GoodTables Validation error\n\n{pro.StandardOut}{pro.StandardError}\nExiting program please check that the data is valid.");
+            //    Console.ReadKey();
+            //    Environment.Exit(1);
+            //}
+            //// if the goodtables.exe file isn't found display message and exit
+            //else if (pro.Status.Equals(CommandLineProcess.StatusCode.FileNotFound))
+            //{
+            //    Console.WriteLine("File not found. Please make sure you have installed python and goodtables.\n"
+            //        +"Check that the folder path for goodtables.exe is added to an environment variable named GOODTABLES_PATH.\n"
+            //        +"Press any key to continue.");
+            //    Console.ReadKey();
+            //    Environment.Exit(1);
+            //}
+            //else
+            //{
+            //    Console.WriteLine($"GoodTables validation\n\n{pro.StandardOut}");
+            //    
+            // This will send the completed tsv back to github
+            github.SendFileAsync(mainFile.ToString(), "data/dataTest.tsv");
+            //    // create agelent file
+            // send agelent file to github
+            github.SendFileAsync(mainFile.PrintAgilent(), "data/dataAgilentTest.tsv");
+            //}
+
         }
     }
+    
     /// <summary>
     /// Simple class to run a command line process and get more feed back for handling issues
     /// </summary>

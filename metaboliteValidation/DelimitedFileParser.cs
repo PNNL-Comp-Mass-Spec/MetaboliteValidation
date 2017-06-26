@@ -12,6 +12,8 @@ namespace metaboliteValidation
         private string[] _headers;
         private string[][] _full;
         private string[][] _reverse;
+        public List<Dictionary<string, string>> FullMap = new List<Dictionary<string, string>>();
+        public Dictionary<string, List<string>> ReverseMap = new Dictionary<string, List<string>>();
         private int _columnLength;
         private int _rowLength;
         private char _delimiter;
@@ -30,7 +32,7 @@ namespace metaboliteValidation
         public void ParseString(string content, char delimiter = ',', bool header = true)
         {
             this._delimiter = delimiter;
-            Parse(content, delimiter, header);
+            Serialize(content, delimiter, header);
         }
         /**
          * <summary>This function will parse a dilimited file by reading the file to a string</summary>
@@ -47,7 +49,7 @@ namespace metaboliteValidation
             }
             this._delimiter = delimiter;
             string content = File.ReadAllText(fileName);
-            Parse(content, delimiter, header);
+            Serialize(content, delimiter, header);
         }
         /**
          * <summary>Private function will parse a dilimited string</summary>
@@ -106,6 +108,71 @@ namespace metaboliteValidation
                     _reverse[j][i] = str[j];
                 }
             }
+        }
+        public void Serialize(string content, char delimiter, bool header)
+        {
+            var lines = content.Split('\n');
+            _rowLength = lines.Length;
+            // if header. track headers in dilimited file
+            if (header)
+            {
+                _headers = lines[0].Split(this._delimiter);
+                var temp = new List<string>(lines);
+                temp.RemoveAt(0);
+                lines = temp.ToArray();
+                _rowLength--;
+                for (var i = 0; i < _headers.Length; i++)
+                {
+                    _headerInverse.Add(_headers[i], i);
+                }
+            }
+            // remove empty last row
+            if (lines[lines.Length - 1].Length == 0)
+            {
+                var temp = new List<string>(lines);
+                temp.RemoveAt(temp.Count - 1);
+                lines = temp.ToArray();
+                _rowLength--;
+            }
+            for (var i = 0; i < lines.Length; i++)
+            {
+                // ignore empty rows
+                if (lines[i].Length <= 0) continue;
+                Dictionary<string, string> tempMap = new Dictionary<string, string>();
+                var str = lines[i].Split(this._delimiter);
+                for(var j = 0;j < _headers.Length;j++)
+                {
+                    tempMap.Add(_headers[j], str[j]);
+                    if (!ReverseMap.ContainsKey(_headers[j]))
+                        ReverseMap.Add(_headers[j], new List<string>());
+                    ReverseMap[_headers[j]].Add(str[j]);
+                }
+                FullMap.Add(tempMap);
+            }
+        }
+        public List<Dictionary<string, string>> GetMap()
+        {
+            return FullMap;
+        }
+        public Dictionary<string, string> GetAt(int index)
+        {
+            return FullMap[index];
+        }
+        public string GetPropertyAt(int index, int key)
+        {
+            return FullMap[index][_headers[key]];
+        }
+        public string GetPropertyAt(int index, string key)
+        {
+            return FullMap[index][key];
+        }
+        public List<string> GetColumnAt(int index)
+        {
+            return ReverseMap[_headers[index]];
+        }
+        public List<string> GetColumnAt(string key)
+        {
+            return ReverseMap[key];
         }
         public Dictionary<string, int> GetHeaderMap()
         {
@@ -172,29 +239,69 @@ namespace metaboliteValidation
          * <summary>This function will append a DelimitedFileParser to the end of this class</summary>
          * <param name="a">The DelimietedFileParser to add to this class</param>
          */
+        //public bool Concat(DelimitedFileParser a)
+        //{
+        //    if (CompareHeaders(a.GetHeaders(), _headers))
+        //    {
+        //        var replacement = new string[_full.Length+a.GetRows().Length][];
+        //        var i = 0;
+        //        for (i = 0; i < _full.Length;i++)
+        //        {
+        //            replacement[i] = _full[i];
+        //        }
+        //        for (var j = 0; j < a.GetRows().Length; j++)
+        //        {
+        //            replacement[i + j] = a.GetRows()[j];
+        //        }
+        //        _full = replacement;
+        //        return true;
+        //    }
+        //    return false;            
+        //}
         public bool Concat(DelimitedFileParser a)
         {
             if (CompareHeaders(a.GetHeaders(), _headers))
             {
-                var replacement = new string[_full.Length+a.GetRows().Length][];
-                var i = 0;
-                for (i = 0; i < _full.Length;i++)
+                FullMap.AddRange(a.GetMap());
+                foreach (var h in _headers)
                 {
-                    replacement[i] = _full[i];
+                    ReverseMap[h].AddRange(a.GetColumnAt(h));
                 }
-                for (var j = 0; j < a.GetRows().Length; j++)
-                {
-                    replacement[i + j] = a.GetRows()[j];
-                }
-                _full = replacement;
                 return true;
             }
-            return false;            
+            return false;
         }
         /**
          * <summary>Converts to a dilimited string using the provided delimiter</summary>
          * <returns>A dilimited string</returns>
          */
+        //public override string ToString()
+        //{
+        //    var result = "";
+        //    var firstHead = true;
+        //    foreach (var head in _headers)
+        //    {
+        //        if (!firstHead)
+        //            result += _delimiter;
+        //        firstHead = false;
+        //        result += head;
+        //    }
+        //    foreach (var row in _full)
+        //    {
+        //        if (!firstHead)
+        //            result += "\n";
+        //        firstHead = false;
+        //        var firstCol = true;
+        //        foreach (var col in row)
+        //        {
+        //            if (!firstCol)
+        //                result += _delimiter;
+        //            firstCol = false;
+        //            result += col;
+        //        }
+        //    }
+        //    return result;
+        //}
         public override string ToString()
         {
             var result = "";
@@ -206,7 +313,7 @@ namespace metaboliteValidation
                 firstHead = false;
                 result += head;
             }
-            foreach (var row in _full)
+            foreach (var row in FullMap)
             {
                 if (!firstHead)
                     result += "\n";
@@ -217,16 +324,59 @@ namespace metaboliteValidation
                     if (!firstCol)
                         result += _delimiter;
                     firstCol = false;
-                    result += col;
+                    result += col.Value;
                 }
             }
             return result;
         }
         /// <summary>
-        /// Agelent formated
+        /// Agilent formated
         /// </summary>
         /// <returns>A string of the data formated for agelent software.</returns>
-        public string PrintAgelent()
+        //public string PrintAgilent()
+        //{
+        //    var headers = "###Formula\tMass\tCompound name\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n"
+        //                  + "#Formula\tMass\tCpd\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n";
+        //    string result = headers;
+        //    var adduct = new Dictionary<string, Dictionary<string, string>>()
+        //    {
+        //        { "mPlusHCCS", new Dictionary<string, string>(){
+        //            {"polarity","positive"},
+        //            {"display","(M+H)+"}
+        //        }},
+        //        {"mPlusNaCCS", new Dictionary<string, string>(){
+        //            { "polarity","positive"},
+        //            {"display","(M+Na)+"}
+        //        }},
+        //        {"mMinusHCCS", new Dictionary<string, string>(){
+        //            {"polarity","negative"},
+        //            { "display","(M-H)-"}
+        //        }},
+        //        {"mPlusDotCCS", new Dictionary<string, string>(){
+        //            { "polarity","positive"},
+        //            {"display","(M)+"}
+        //        }}
+        //    };
+        //    foreach (var row in _full)
+        //    {
+        //        var tempStr = row[_headerInverse["formula"]]+"\t"
+        //            + row[_headerInverse["mass"]] + "\t"
+        //            + row[_headerInverse["Neutral Name"]] + "\t"
+        //                 + row[_headerInverse["kegg"]] + "\t"
+        //                 + row[_headerInverse["cas"]];
+        //        foreach (var key in adduct.Keys)
+        //        {
+        //            if (!String.IsNullOrEmpty(row[_headerInverse[key]]) && !row[_headerInverse[key]].Equals("N/A"))
+        //            {
+        //                result += tempStr + "\t" + adduct[key]["polarity"] + "\t" + adduct[key]["display"] + "\t" +
+        //                          row[_headerInverse[key]]+"\t\tN2\t\t\n";
+        //            }  
+        //        }
+                
+        //    }
+        //    return result;
+        //}
+        public string PrintAgilent()
         {
             var headers = "###Formula\tMass\tCompound name\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n"
                           + "#Formula\tMass\tCpd\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n";
@@ -250,22 +400,22 @@ namespace metaboliteValidation
                     {"display","(M)+"}
                 }}
             };
-            foreach (var row in _full)
+            foreach (var row in FullMap)
             {
-                var tempStr = row[_headerInverse["formula"]]+"\t"
-                    + row[_headerInverse["mass"]] + "\t"
-                    + row[_headerInverse["Neutral Name"]] + "\t"
-                         + row[_headerInverse["kegg"]] + "\t"
-                         + row[_headerInverse["cas"]];
+                var tempStr = row["formula"] + "\t"
+                    + row["mass"] + "\t"
+                    + row["Neutral Name"] + "\t"
+                         + row["kegg"] + "\t"
+                         + row["cas"];
                 foreach (var key in adduct.Keys)
                 {
-                    if (!String.IsNullOrEmpty(row[_headerInverse[key]]) && !row[_headerInverse[key]].Equals("N/A"))
+                    if (!String.IsNullOrEmpty(row[key]) && !row[key].Equals("N/A"))
                     {
                         result += tempStr + "\t" + adduct[key]["polarity"] + "\t" + adduct[key]["display"] + "\t" +
-                                  row[_headerInverse[key]]+"\t\tN2\t\t\n";
-                    }  
+                                  row[key] + "\t\tN2\t\t\n";
+                    }
                 }
-                
+
             }
             return result;
         }
