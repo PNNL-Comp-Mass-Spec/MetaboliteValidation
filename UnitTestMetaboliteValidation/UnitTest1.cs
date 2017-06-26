@@ -84,7 +84,7 @@ namespace UnitTestMetaboliteValidation
                 + "Primary Metabolite\tAmino Acid\tsc-215594\tSanta Cruz Biotechnology\t\t99715\tHXFOXFJUNFFYMO-BYPYZUCNSA-N\tN-Alpha-Acetyl-L-Asparagine\t4033-40-3\tC6H10N2O4\t174.0634\t175.0713\tN/A\tN/A\t197.0532\tN/A\tN/A\t173.0555\t137.87\t0.45\t\t\t";
             var a = new DelimitedFileParser();
             a.ParseString(bStr,'\t');
-            Assert.AreEqual(aStr, a.PrintAgelent());
+            Assert.AreEqual(aStr, a.PrintAgilent());
         }
     }
 }

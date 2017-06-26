@@ -63,6 +63,7 @@
     <Compile Include="GoodTableResponse\ResultContext.cs" />
     <Compile Include="GoodTableResponse\ResultMeta.cs" />
     <Compile Include="GoodTableResponse\Sources.cs" />
+    <Compile Include="KeggUtil.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PubchemUtil.cs" />
