@@ -20,8 +20,7 @@ namespace metaboliteValidation
         private readonly Dictionary<string, int> _headerInverse = new Dictionary<string, int>();
         public DelimitedFileParser() 
         {
-            
-            
+            _delimiter = ',';
         }
         /**
          * <summary>This function will parse a dilimited string</summary>
@@ -150,6 +149,38 @@ namespace metaboliteValidation
                 FullMap.Add(tempMap);
             }
         }
+
+        internal void SetDelimiter(char v)
+        {
+            _delimiter = v;
+        }
+
+        internal void SetHeaders(string[] v)
+        {
+            _headers = v;
+        }
+
+        internal int Count()
+        {
+            return FullMap.Count();
+        }
+
+        internal void Remove(Dictionary<string, string> a)
+        {
+            FullMap.Remove(a);
+        }
+
+        internal void Add(Dictionary<string, string> a)
+        {
+            FullMap.Add(a);
+            foreach (var key in a.Keys)
+            {
+                if (!ReverseMap.ContainsKey(key))
+                    ReverseMap.Add(key, new List<string>());
+                ReverseMap[key].Add(a[key]);
+            }
+        }
+
         public List<Dictionary<string, string>> GetMap()
         {
             return FullMap;
@@ -306,12 +337,15 @@ namespace metaboliteValidation
         {
             var result = "";
             var firstHead = true;
-            foreach (var head in _headers)
+            if (_headers != null)
             {
-                if (!firstHead)
-                    result += _delimiter;
-                firstHead = false;
-                result += head;
+                foreach (var head in _headers)
+                {
+                    if (!firstHead)
+                        result += _delimiter;
+                    firstHead = false;
+                    result += head;
+                }
             }
             foreach (var row in FullMap)
             {
