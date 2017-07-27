@@ -15,29 +15,37 @@ namespace metaboliteValidation
         public Dictionary<int, Compound> PubChemMap = new Dictionary<int, Compound>();
         public PubchemUtil(string[] cids)
         {
-            // make request to pubchem website
-            var request = (HttpWebRequest)WebRequest.Create(BaseUrl + "/compound/cid/" + string.Join(",", cids) + "/JSON");
-            // get response
-            var response = (HttpWebResponse)request.GetResponse();
-            // read stream
-            var resStream = response.GetResponseStream();
-            if (resStream == null)
+            var maxEntries = 100;
+            var index = (int)cids.Count() / maxEntries;
+            for (int i = 0; i <= index; i++)
             {
-                throw new NullReferenceException();
+                var splitCids = cids.ToList().GetRange(i* maxEntries, Math.Min(maxEntries, cids.Count() - i* maxEntries));
+
+                // make request to pubchem website
+                var request = (HttpWebRequest)WebRequest.Create(BaseUrl + "/compound/cid/" + string.Join(",", splitCids) + "/JSON");
+                // get response
+                var response = (HttpWebResponse)request.GetResponse();
+                // read stream
+                var resStream = response.GetResponseStream();
+                if (resStream == null)
+                {
+                    throw new NullReferenceException();
+                }
+                var reader = new StreamReader(resStream);
+                // Convert string to json
+                var pubResponse = (PcCompounds)JsonConvert.DeserializeObject(reader.ReadToEnd(), typeof(PcCompounds));
+                // convert to a dictionary with cid as key to make comparisons
+                ConverToMap(pubResponse.PC_Compounds);
             }
-            var reader = new StreamReader(resStream);
-            // Convert string to json
-            var pubResponse = (PcCompounds)JsonConvert.DeserializeObject(reader.ReadToEnd(), typeof(PcCompounds));
-            // convert to a dictionary with cid as key to make comparisons
-            ConverToMap(pubResponse.PC_Compounds);
+           
         }
         // converts array to dictionary with cid as key and values as the properties from pubchem
         private void ConverToMap(List<Compound> p)
         {
             foreach (var a in p)
             {
-                if (!PubChemMap.ContainsKey(a.id.id["cid"]))
-                    PubChemMap.Add(a.id.id["cid"], a);
+                if (!PubChemMap.ContainsKey(a.getId()))
+                    PubChemMap.Add(a.getId(), a);
             }
         }
     }
@@ -63,6 +71,10 @@ namespace metaboliteValidation
         public Value findProp(string query)
         {
             return props.Where(x => x.urn.label !=null && x.urn.label.Equals(query)|| x.urn.name != null && x.urn.name.Equals(query)).ToList().First().value;
+        }
+        public int getId()
+        {
+            return id.id["cid"];
         }
     }
     public class Prop

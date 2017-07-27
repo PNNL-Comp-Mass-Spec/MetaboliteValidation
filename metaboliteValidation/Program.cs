@@ -87,59 +87,92 @@ namespace metaboliteValidation
             // init github api interaction with the repo and owner
             var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec");
             // get main data file from github 
-            var dataFile = github.GetFile("data/metabolitedata.tsv");
-            if (dataFile == null) Environment.Exit(1);
+            var dataFile = github.GetFile("data/dataTest.tsv");// data/metabolitedata.tsv");
+            // if (dataFile == null) Environment.Exit(1);
             // strings to run good tables in the command line
             string userDirPath = Environment.GetEnvironmentVariable("goodtables_path");
             string commandLine = $"schema \"{args[0]}\" --schema \"{SchemaUrl}\"";
             string goodtablesPath = $"{userDirPath}\\goodtables";
-            // parse the main data file from github
-            DelimitedFileParser mainFile = new DelimitedFileParser();
-            mainFile.ParseString(dataFile, '\t');
+            
             // parse the new data to append to current data
             DelimitedFileParser fileToAppend = new DelimitedFileParser();
             fileToAppend.ParseFile(args[0], '\t');
+
+            // parse the main data file from github
+            DelimitedFileParser mainFile = new DelimitedFileParser();
+            if (dataFile == null)
+            {
+                mainFile.SetDelimiter('\t');
+                mainFile.SetHeaders(fileToAppend.GetHeaders());
+            }
+            else
+            {
+                mainFile.ParseString(dataFile, '\t');
+            }
+                
+
             if (!ignore)
             {
                 // get ids for kegg and pubchem
-                List<string> keggIds = fileToAppend.GetColumnAt("KEGG").Where(x => !string.IsNullOrEmpty(x)).ToList();
-                List<string> cidIds = fileToAppend.GetColumnAt("CID").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                List<string> keggIds = fileToAppend.GetColumnAt("kegg").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                List<string> cidIds = fileToAppend.GetColumnAt("cid").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                List<string> mainCasIds = mainFile.GetColumnAt("cas").Where(x => !string.IsNullOrEmpty(x)).ToList();
                 // generate pubchem and kegg utils
                 PubchemUtil pub = new PubchemUtil(cidIds.ToArray());
                 KeggUtil kegg = new KeggUtil(keggIds.ToArray());
                 StreamWriter file = new StreamWriter("testValidationApi.txt");
 
+                DelimitedFileParser dupRows = new DelimitedFileParser();
+                dupRows.SetHeaders(fileToAppend.GetHeaders());
+                dupRows.SetDelimiter('\t');
                 DelimitedFileParser warningRows = new DelimitedFileParser();
                 warningRows.SetHeaders(fileToAppend.GetHeaders());
                 warningRows.SetDelimiter('\t');
+                DelimitedFileParser missingKegg = new DelimitedFileParser();
+                missingKegg.SetHeaders(fileToAppend.GetHeaders());
+                missingKegg.SetDelimiter('\t');
+                var dataMap = fileToAppend.GetMap();
                 // compare fileToAppend to utils
-                foreach (var a in fileToAppend.GetMap())
+                for (var i = dataMap.Count - 1;i >= 0;i--)
                 {
                     Compound p = null;
                     CompoundData k = null;
-                    if (!string.IsNullOrEmpty(a["CID"]))
-                        p = pub.PubChemMap[int.Parse(a["CID"])];
-                    if (!string.IsNullOrEmpty(a["KEGG"]))
-                        k = kegg.CompoundsMap[a["KEGG"]];
-                    if (!CheckRow(a, p, k))
+                    if (!string.IsNullOrEmpty(dataMap[i]["cid"]))
+                        p = pub.PubChemMap[int.Parse(dataMap[i]["cid"])];
+                    if (!string.IsNullOrEmpty(dataMap[i]["kegg"])&& kegg.CompoundsMap.ContainsKey(dataMap[i]["kegg"]))
+                        k = kegg.CompoundsMap[dataMap[i]["kegg"]];
+                    if (mainCasIds.Contains(dataMap[i]["cas"]))
                     {
-                        // remove from list add to warning file
-                        WriteContentToFile(file, a, p, k);
-                        warningRows.Add(a);
-                        
+                        dupRows.Add(dataMap[i]);
                     }
-                }
-                foreach (var wRow in warningRows.GetMap())
-                {
-                    fileToAppend.Remove(wRow);
+                    else
+                    {
+                        if (k == null && CheckRow(dataMap[i], p, k))
+                        {
+                            missingKegg.Add(dataMap[i]);
+                        }
+                        else if (!CheckRow(dataMap[i], p, k))
+                        {
+                            // remove from list add to warning file
+                            WriteContentToFile(file, dataMap[i], p, k, warningRows.Count() + 2);
+                            warningRows.Add(dataMap[i]);
+                            fileToAppend.Remove(dataMap[i]);
+                        }
+                    }
                 }
 
                 file.Close();
                 GoodTables goodtables = new GoodTables(fileToAppend.ToString(), SchemaUrl);
-                if (!goodtables.Response.success) { goodtables.OutputResponse(new StreamWriter("testGoodTablesApi.txt")); }
-                StreamWriter warnFile = new StreamWriter("WarningFile.tsv");
-                warnFile.Write(warningRows.ToString());
-                warnFile.Close();
+                if (!goodtables.Response.success) {
+                    //foreach(var result in goodtables.Response.report.results)
+                    //{
+                    //    fileToAppend.Remove(result["0"].result_context[0]);
+                    //}
+                    goodtables.OutputResponse(new StreamWriter("testGoodTablesApi.txt"));
+                }
+                streamToFile("dupRows.tsv", dupRows);
+                streamToFile("WarningFile.tsv", warningRows);
+                streamToFile("NoKeggFile.tsv", missingKegg);
             }
             else
             {
@@ -181,6 +214,12 @@ namespace metaboliteValidation
                 //}
             }
         }
+        private void streamToFile(string fileName, DelimitedFileParser parsedFile)
+        {
+            StreamWriter warnFile = new StreamWriter(fileName);
+            warnFile.Write(parsedFile.ToString());
+            warnFile.Close();
+        }
         public bool CheckRow(Dictionary<string, string> row, Compound pubChem, CompoundData kegg)
         {
             var rowFormula = row["formula"];
@@ -200,17 +239,19 @@ namespace metaboliteValidation
             {
                 keggFormula = kegg.Formula;
                 keggExactMass = kegg.ExactMass;
-                keggCas = kegg.OtherIds.Where(x=>x.Key == "CAS").ToList().First().Value;
+                keggCas = kegg.OtherId("CAS");
+                return rowFormula == keggFormula
+                    && rowFormula == pubFormula
+                    && rowCas == keggCas
+                    && rowMass == (int)keggExactMass
+                    && rowMass == (int)pubMass;
             }
-            return rowFormula == keggFormula
-                && rowFormula == pubFormula
-                && rowCas == keggCas
-                && rowMass == (int)keggExactMass
+            return rowFormula == pubFormula
                 && rowMass == (int)pubMass;
         }
-        private void WriteContentToFile(StreamWriter file, Dictionary<string, string> row, Compound pubChem, CompoundData kegg)
+        private void WriteContentToFile(StreamWriter file, Dictionary<string, string> row, Compound pubChem, CompoundData kegg, int rowIndex)
         {
-            file.Write(printHead());
+            file.Write(printHead(rowIndex));
             file.Write(printRow(row));
             file.Write(printKegg(kegg));
             file.Write(printPubChem(pubChem));
@@ -218,27 +259,27 @@ namespace metaboliteValidation
         }
         private string printRow(Dictionary<string, string> a)
         {
-            return $"{"Actual",10}{(int)double.Parse(a["mass"]),20}{a["formula"],20}\n";
+            return $"{"Actual",10}{"",10}{(int)double.Parse(a["mass"]),20}{a["formula"],20}{a["cas"],20}\n";
         }
         private string printPubChem(Compound p)
         {
             if (p != null)
-                return $"{"PubChem",10}" +
+                return $"{"PubChem",10}{p.getId(),10}" + 
                     $"{(int)p.findProp("MonoIsotopic").fval,20}" +
-                    $"{p.findProp("Molecular Formula").sval,20}\n";
+                    $"{p.findProp("Molecular Formula").sval,20}{"No Cas Information",20}\n";
             return "No PubChem\n";
         }
         private string printKegg(CompoundData k)
         {
             if (k != null)
-                return $"{"Kegg",10}" +
+                return $"{"Kegg",10}{k.KeggId,10}" +
                     $"{(int)k.ExactMass,20}" +
-                    $"{k.Formula,20}\n";
+                    $"{k.Formula,20}{k.OtherId("CAS"),20}\n";
             return "No Kegg\n";
         }
-        private string printHead()
+        private string printHead(int rowIndex)
         {
-            return $"{"",10}{"Mass",20}{"Formula",20}\n";
+            return $"{$"Row {rowIndex}",10}{"ID",10}{"Mass",20}{"Formula",20}{"CAS",20}\n";
         }
     }
     

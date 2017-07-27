@@ -308,7 +308,10 @@ namespace metaboliteValidation.GithubApi
                             {
                                 Console.WriteLine("Unauthorized, username, password is incorrect or you don't have access to this repository.");
                             }
-
+                            if (resp.StatusCode == HttpStatusCode.NotFound)
+                            {
+                                return null;
+                            }
                         }
                         return resp.Content.ReadAsStringAsync().Result;
                     }

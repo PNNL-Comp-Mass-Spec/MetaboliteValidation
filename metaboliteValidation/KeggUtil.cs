@@ -14,34 +14,40 @@ namespace metaboliteValidation
         public Dictionary<string, CompoundData> CompoundsMap { get;set;}
         public KeggUtil(string[] ids)
         {
-            using (var client = new HttpClient())
+            CompoundsMap = new Dictionary<string, CompoundData>();
+            var maxEntries = 10;
+            var index = (int)ids.Count() / maxEntries;
+            for (int i = 0; i <= index; i++)
             {
-                using (var req = new HttpRequestMessage(HttpMethod.Get, "http://rest.kegg.jp/get/" + String.Join("+", ids)))
+                var splitIds = ids.ToList().GetRange(i * maxEntries, Math.Min(maxEntries, ids.Count() - i * maxEntries));
+                using (var client = new HttpClient())
                 {
-                    using (HttpResponseMessage resp = client.SendAsync(req).Result)
+                    using (var req = new HttpRequestMessage(HttpMethod.Get, "http://rest.kegg.jp/get/" + String.Join("+", splitIds)))
                     {
-                        try
+                        using (HttpResponseMessage resp = client.SendAsync(req).Result)
                         {
-                            resp.EnsureSuccessStatusCode();
-                        }
-                        catch (Exception e)
-                        {
+                            try
+                            {
+                                resp.EnsureSuccessStatusCode();
+                            }
+                            catch (Exception e)
+                            {
 
-                        }
-                        string[] comps = resp.Content.ReadAsStringAsync().Result.Split(new string[] { "///\n" },StringSplitOptions.None).Where(x => !string.IsNullOrEmpty(x)).ToArray();
-                        CompoundsMap = new Dictionary<string, CompoundData>();
-                        foreach (var str in comps)
-                        {
-                            Compounds.Add(ReadKeggCompoundStream(str));
+                            }
+                            string[] comps = resp.Content.ReadAsStringAsync().Result.Split(new string[] { "///\n" }, StringSplitOptions.None).Where(x => !string.IsNullOrEmpty(x)).ToArray();
+                            CompoundsMap = new Dictionary<string, CompoundData>();
+                            foreach (var str in comps)
+                            {
+                                Compounds.Add(ReadKeggCompoundStream(str));
+                            }
                         }
                     }
                 }
+                toCompoundMap(Compounds);
             }
-            toCompoundMap(Compounds);
         }
         private void toCompoundMap(List<CompoundData> list)
         {
-            CompoundsMap = new Dictionary<string, CompoundData>();
             foreach (var a in list)
             {
                 if (!CompoundsMap.ContainsKey(a.KeggId))
@@ -150,7 +156,13 @@ namespace metaboliteValidation
             Formula = string.Empty;
             Comment = string.Empty;
         }
-
+        public string OtherId(string query)
+        {
+            var keyValuePair = OtherIds.Where(x => x.Key.Equals(query)).ToList().FirstOrDefault();
+            if (keyValuePair.Equals(default(KeyValuePair<string,string>)))
+                return "";
+            return keyValuePair.Value;
+        }
         public override string ToString()
         {
             return this.KeggId;

@@ -46,12 +46,6 @@ namespace metaboliteValidation.GoodTableResponse
                             }
                         }
                         Response = JsonConvert.DeserializeObject<Response>(resp.Content.ReadAsStringAsync().Result);
-                        //if (!Response.success)
-                        //{
-                        //    StreamWriter file = new StreamWriter("testGoodTablesApi.txt");
-                        //    file.Write(JsonConvert.SerializeObject(Response, Formatting.Indented));
-                        //    file.Close();
-                        //}
                     }
 
                 }
