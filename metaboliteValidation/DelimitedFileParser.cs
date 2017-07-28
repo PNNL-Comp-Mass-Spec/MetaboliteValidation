@@ -145,10 +145,10 @@ namespace metaboliteValidation
                 var str = lines[i].Split(this._delimiter);
                 for(var j = 0;j < _headers.Length;j++)
                 {
-                    tempMap.Add(_headers[j], str[j].Trim());
+                    tempMap.Add(_headers[j], str[j].Trim().Trim('\uFFFD'));
                     if (!ReverseMap.ContainsKey(_headers[j]))
                         ReverseMap.Add(_headers[j], new List<string>());
-                    ReverseMap[_headers[j]].Add(str[j].Trim());
+                    ReverseMap[_headers[j]].Add(str[j].Trim().Trim('\uFFFD'));
                 }
                 FullMap.Add(tempMap);
             }
