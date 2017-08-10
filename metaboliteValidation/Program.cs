@@ -87,7 +87,7 @@ namespace metaboliteValidation
             // init github api interaction with the repo and owner
             var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec");
             // get main data file from github 
-            var dataFile = github.GetFile("data/dataTest.tsv");// data/metabolitedata.tsv");
+            var dataFile = github.GetFile("data/metabolitedata.tsv");
             // if (dataFile == null) Environment.Exit(1);
             // strings to run good tables in the command line
             string userDirPath = Environment.GetEnvironmentVariable("goodtables_path");
@@ -120,7 +120,7 @@ namespace metaboliteValidation
                 // generate pubchem and kegg utils
                 PubchemUtil pub = new PubchemUtil(cidIds.ToArray());
                 KeggUtil kegg = new KeggUtil(keggIds.ToArray());
-                StreamWriter file = new StreamWriter("testValidationApi.txt");
+                StreamWriter file = new StreamWriter("ValidationApi.txt");
 
                 DelimitedFileParser dupRows = new DelimitedFileParser();
                 dupRows.SetHeaders(fileToAppend.GetHeaders());
@@ -168,9 +168,9 @@ namespace metaboliteValidation
                     //{
                     //    fileToAppend.Remove(result["0"].result_context[0]);
                     //}
-                    goodtables.OutputResponse(new StreamWriter("testGoodTablesApi.txt"));
+                    goodtables.OutputResponse(new StreamWriter("GoodTablesApiOutput.txt"));
                 }
-                streamToFile("dupRows.tsv", dupRows);
+                streamToFile("duplicateRows.tsv", dupRows);
                 streamToFile("WarningFile.tsv", warningRows);
                 streamToFile("NoKeggFile.tsv", missingKegg);
             }
@@ -207,10 +207,10 @@ namespace metaboliteValidation
                 //    Console.WriteLine($"GoodTables validation\n\n{pro.StandardOut}");
                 //    
                 // This will send the completed tsv back to github
-                github.SendFileAsync(mainFile.ToString(), "data/dataTest.tsv");
+                github.SendFileAsync(mainFile.ToString(), "data/metabolitedata.tsv");
                 //    // create agelent file
                 // send agelent file to github
-                github.SendFileAsync(mainFile.PrintAgilent(), "data/dataAgilentTest.tsv");
+                github.SendFileAsync(mainFile.PrintAgilent(), "data/metabolitedataAgilent.tsv");
                 //}
             }
         }
