@@ -120,211 +120,219 @@ namespace MetaboliteValidation
         /// <param name="options">Processing options</param>
         /// <returns>True on success, false if an error</returns>
         private bool ProcessMetabolites(MetaboliteValidatorOptions options)
-    {
-
-            // init github api interaction with the repo and owner
-            var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec", options.Preview);
-
-            if (!string.IsNullOrEmpty(options.Username))
+        {
+            try
             {
-                github.Username = options.Username;
+                // init github api interaction with the repo and owner
+                var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec", options.Preview);
 
-                if (!string.IsNullOrEmpty(options.Password))
+                if (!string.IsNullOrEmpty(options.Username))
                 {
-                    if (options.Password.StartsWith("*"))
+                    github.Username = options.Username;
+
+                    if (!string.IsNullOrEmpty(options.Password))
                     {
-                        github.Password = MetaboliteValidatorOptions.DecodePassword(options.Password.Substring(1));
-                    }
-                    else
-                    {
-                        github.Password = options.Password;
-                    }
-
-                }
-            }
-
-            // get main data file from github
-            var dataFile = github.GetFile("data/metabolitedata.tsv");
-
-            // parse the new data to append to current data
-            DelimitedFileParser fileToAppend = new DelimitedFileParser();
-            fileToAppend.ParseFile(options.InputFile, '\t');
-
-            // Update column names if necessary
-            UpdateHeaders(fileToAppend);
-
-            // parse the main data file from github
-            DelimitedFileParser mainFile = new DelimitedFileParser();
-            if (dataFile == null)
-            {
-                mainFile.SetDelimiter('\t');
-                mainFile.SetHeaders(fileToAppend.GetHeaders());
-            }
-            else
-            {
-                mainFile.ParseString(dataFile, '\t');
-            }
-
-            // Update column names if necessary
-            UpdateHeaders(mainFile);
-
-            var duplicateRowCount = 0;
-
-            if (!options.IgnoreErrors)
-            {
-                // get ids for kegg and pubchem
-                List<string> keggIds = fileToAppend.GetColumnAt("kegg").Where(x => !string.IsNullOrEmpty(x)).ToList();
-                List<string> cidIds = fileToAppend.GetColumnAt("pubchem cid").Where(x => !string.IsNullOrEmpty(x)).ToList();
-                List<string> mainCasIds = mainFile.GetColumnAt("cas").Where(x => !string.IsNullOrEmpty(x)).ToList();
-
-                // generate pubchem and kegg utils
-                PubchemUtil pub = new PubchemUtil(cidIds.ToArray());
-                KeggUtil kegg = new KeggUtil(keggIds.ToArray());
-                StreamWriter file = new StreamWriter("ValidationApi.txt");
-
-                DelimitedFileParser dupRows = new DelimitedFileParser();
-                dupRows.SetHeaders(fileToAppend.GetHeaders());
-                dupRows.SetDelimiter('\t');
-
-                DelimitedFileParser warningRows = new DelimitedFileParser();
-                warningRows.SetHeaders(fileToAppend.GetHeaders());
-                warningRows.SetDelimiter('\t');
-
-                DelimitedFileParser missingKegg = new DelimitedFileParser();
-                missingKegg.SetHeaders(fileToAppend.GetHeaders());
-                missingKegg.SetDelimiter('\t');
-
-                var dataMap = fileToAppend.GetMap();
-
-                // compare fileToAppend to utils
-                for (var i = dataMap.Count - 1; i >= 0; i--)
-                {
-                    Compound p = null;
-                    CompoundData k = null;
-                    if (!string.IsNullOrEmpty(dataMap[i]["pubchem cid"]))
-                        p = pub.PubChemMap[int.Parse(dataMap[i]["pubchem cid"])];
-                    if (!string.IsNullOrEmpty(dataMap[i]["kegg"]) && kegg.CompoundsMap.ContainsKey(dataMap[i]["kegg"]))
-                        k = kegg.CompoundsMap[dataMap[i]["kegg"]];
-                    if (mainCasIds.Contains(dataMap[i]["cas"]))
-                    {
-                        dupRows.Add(dataMap[i]);
-                        fileToAppend.Remove(dataMap[i]);
-                    }
-                    else
-                    {
-                        if (k == null && CheckRow(dataMap[i], p, k))
+                        if (options.Password.StartsWith("*"))
                         {
-                            missingKegg.Add(dataMap[i]);
+                            github.Password = MetaboliteValidatorOptions.DecodePassword(options.Password.Substring(1));
                         }
-                        else if (!CheckRow(dataMap[i], p, k))
+                        else
                         {
-                            // remove from list add to warning file
-                            WriteContentToFile(file, dataMap[i], p, k, warningRows.Count() + 2);
-                            warningRows.Add(dataMap[i]);
+                            github.Password = options.Password;
+                        }
+
+                    }
+                }
+
+                // get main data file from github
+                var dataFile = github.GetFile("data/metabolitedata.tsv");
+
+                // parse the new data to append to current data
+                DelimitedFileParser fileToAppend = new DelimitedFileParser();
+                fileToAppend.ParseFile(options.InputFile, '\t');
+
+                // Update column names if necessary
+                UpdateHeaders(fileToAppend);
+
+                // parse the main data file from github
+                DelimitedFileParser mainFile = new DelimitedFileParser();
+                if (dataFile == null)
+                {
+                    mainFile.SetDelimiter('\t');
+                    mainFile.SetHeaders(fileToAppend.GetHeaders());
+                }
+                else
+                {
+                    mainFile.ParseString(dataFile, '\t');
+                }
+
+                // Update column names if necessary
+                UpdateHeaders(mainFile);
+
+                var duplicateRowCount = 0;
+
+                if (!options.IgnoreErrors)
+                {
+                    // get ids for kegg and pubchem
+                    List<string> keggIds = fileToAppend.GetColumnAt("kegg").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                    List<string> cidIds = fileToAppend.GetColumnAt("pubchem cid").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                    List<string> mainCasIds = mainFile.GetColumnAt("cas").Where(x => !string.IsNullOrEmpty(x)).ToList();
+
+                    // generate pubchem and kegg utils
+                    PubchemUtil pub = new PubchemUtil(cidIds.ToArray());
+                    KeggUtil kegg = new KeggUtil(keggIds.ToArray());
+                    StreamWriter file = new StreamWriter("ValidationApi.txt");
+
+                    DelimitedFileParser dupRows = new DelimitedFileParser();
+                    dupRows.SetHeaders(fileToAppend.GetHeaders());
+                    dupRows.SetDelimiter('\t');
+
+                    DelimitedFileParser warningRows = new DelimitedFileParser();
+                    warningRows.SetHeaders(fileToAppend.GetHeaders());
+                    warningRows.SetDelimiter('\t');
+
+                    DelimitedFileParser missingKegg = new DelimitedFileParser();
+                    missingKegg.SetHeaders(fileToAppend.GetHeaders());
+                    missingKegg.SetDelimiter('\t');
+
+                    var dataMap = fileToAppend.GetMap();
+
+                    // compare fileToAppend to utils
+                    for (var i = dataMap.Count - 1; i >= 0; i--)
+                    {
+                        Compound p = null;
+                        CompoundData k = null;
+                        if (!string.IsNullOrEmpty(dataMap[i]["pubchem cid"]))
+                            p = pub.PubChemMap[int.Parse(dataMap[i]["pubchem cid"])];
+                        if (!string.IsNullOrEmpty(dataMap[i]["kegg"]) && kegg.CompoundsMap.ContainsKey(dataMap[i]["kegg"]))
+                            k = kegg.CompoundsMap[dataMap[i]["kegg"]];
+                        if (mainCasIds.Contains(dataMap[i]["cas"]))
+                        {
+                            dupRows.Add(dataMap[i]);
                             fileToAppend.Remove(dataMap[i]);
                         }
+                        else
+                        {
+                            if (k == null && CheckRow(dataMap[i], p, k))
+                            {
+                                missingKegg.Add(dataMap[i]);
+                            }
+                            else if (!CheckRow(dataMap[i], p, k))
+                            {
+                                // remove from list add to warning file
+                                WriteContentToFile(file, dataMap[i], p, k, warningRows.Count() + 2);
+                                warningRows.Add(dataMap[i]);
+                                fileToAppend.Remove(dataMap[i]);
+                            }
+                        }
                     }
-                }
 
-                duplicateRowCount = dupRows.Count();
+                    duplicateRowCount = dupRows.Count();
 
-                file.Close();
+                    file.Close();
 
-                if (fileToAppend.Count() > 0)
-                {
-
-                    Console.WriteLine("Validating data file with GoodTables");
-                    GoodTables goodtables = new GoodTables(fileToAppend.ToString(true), SchemaUrl);
-                    if (!goodtables.Response.success)
+                    if (fileToAppend.Count() > 0)
                     {
-                        //foreach(var result in goodtables.Response.report.results)
-                        //{
-                        //    fileToAppend.Remove(result["0"].result_context[0]);
-                        //}
 
-                        goodtables.OutputResponse(new StreamWriter(GOOD_TABLES_WARNING_FILE));
+                        Console.WriteLine("Validating data file with GoodTables");
+                        GoodTables goodtables = new GoodTables(fileToAppend.ToString(true), SchemaUrl);
+                        if (!goodtables.Response.success)
+                        {
+                            //foreach(var result in goodtables.Response.report.results)
+                            //{
+                            //    fileToAppend.Remove(result["0"].result_context[0]);
+                            //}
 
-                        Console.WriteLine();
-                        Console.WriteLine("GoodTables reports errors; see " + GOOD_TABLES_WARNING_FILE);
-                        Console.WriteLine("Note that data with N/A in columns that expect a number will be flagged as an error by GoodTables; those errors can be ignored");
+                            goodtables.OutputResponse(new StreamWriter(GOOD_TABLES_WARNING_FILE));
+
+                            Console.WriteLine();
+                            Console.WriteLine("GoodTables reports errors; see " + GOOD_TABLES_WARNING_FILE);
+                            Console.WriteLine("Note that data with N/A in columns that expect a number will be flagged as an error by GoodTables; those errors can be ignored");
+                        }
                     }
+
+                    streamToFile(DUPLICATE_ROWS_FILE, dupRows);
+                    streamToFile(WARNING_ROWS_FILE, warningRows);
+                    streamToFile(MISSING_KEGG_FILE, missingKegg);
+
+                    if (warningRows.Count() > 0)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("Warnings were encountered; see file " + WARNING_ROWS_FILE);
+                    }
+
+                    if (missingKegg.Count() > 0)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("Warnings were encountered; see file " + MISSING_KEGG_FILE);
+                    }
+
                 }
-
-                streamToFile(DUPLICATE_ROWS_FILE, dupRows);
-                streamToFile(WARNING_ROWS_FILE, warningRows);
-                streamToFile(MISSING_KEGG_FILE, missingKegg);
-
-                if (warningRows.Count() > 0)
+                else
                 {
                     Console.WriteLine();
-                    Console.WriteLine("Warnings were encountered; see file " + WARNING_ROWS_FILE);
+                    Console.WriteLine("Ignoring validation, skipping to file upload.");
                 }
 
-                if (missingKegg.Count() > 0)
+                if (fileToAppend.Count() == 0)
                 {
                     Console.WriteLine();
-                    Console.WriteLine("Warnings were encountered; see file " + MISSING_KEGG_FILE);
+                    Console.WriteLine("No new compounds were found; see {0} for the {1} skipped compounds", DUPLICATE_ROWS_FILE, duplicateRowCount);
                 }
-
-            }
-            else
-            {
-                Console.WriteLine();
-                Console.WriteLine("Ignoring validation, skipping to file upload.");
-            }
-
-            if (fileToAppend.Count() == 0)
-            {
-                Console.WriteLine();
-                Console.WriteLine("No new compounds were found; see {0} for the {1} skipped compounds", DUPLICATE_ROWS_FILE, duplicateRowCount);
-            }
-            else
-            {
-                // this will add the new data tsv to the existing tsv downloaded from github
-                var success = mainFile.Concat(fileToAppend);
-
-                if (!success)
+                else
                 {
-                    // Concatenation of new records failed; do not upload
-                    return false;
+                    // this will add the new data tsv to the existing tsv downloaded from github
+                    var success = mainFile.Concat(fileToAppend);
+
+                    if (!success)
+                    {
+                        // Concatenation of new records failed; do not upload
+                        return false;
+                    }
+
+                    // start command line process for goodtables
+                    //
+                    // string userDirPath = Environment.GetEnvironmentVariable("goodtables_path");
+                    // string commandLine = $"schema \"{options.InputFile}\" --schema \"{SchemaUrl}\"";
+                    // string goodtablesPath = $"{userDirPath}\\goodtables";
+                    //CommandLineProcess pro = new CommandLineProcess(goodtablesPath, commandLine);
+                    //// if error display errors and exit
+                    //if (pro.Status.Equals(CommandLineProcess.StatusCode.Error))
+                    //{
+                    //    Console.WriteLine($"GoodTables Validation error\n\n{pro.StandardOut}{pro.StandardError}\nExiting program please check that the data is valid.");
+                    //    Console.ReadKey();
+                    //    Environment.Exit(1);
+                    //}
+                    //// if the goodtables.exe file isn't found display message and exit
+                    //else if (pro.Status.Equals(CommandLineProcess.StatusCode.FileNotFound))
+                    //{
+                    //    Console.WriteLine("File not found. Please make sure you have installed python and goodtables.\n"
+                    //        +"Check that the folder path for goodtables.exe is added to an environment variable named GOODTABLES_PATH.\n"
+                    //        +"Press any key to continue.");
+                    //    Console.ReadKey();
+                    //    Environment.Exit(1);
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine($"GoodTables validation\n\n{pro.StandardOut}");
+                    //
+                    // This will send the completed tsv back to github
+                    github.SendFileAsync(mainFile.ToString(true), "data/metabolitedata.tsv");
+
+                    // send Agilent file to github
+                    github.SendFileAsync(mainFile.PrintAgilent(), "data/metabolitedataAgilent.tsv");
+                    //}
                 }
 
-                // start command line process for goodtables
-                //
-                // string userDirPath = Environment.GetEnvironmentVariable("goodtables_path");
-                // string commandLine = $"schema \"{options.InputFile}\" --schema \"{SchemaUrl}\"";
-                // string goodtablesPath = $"{userDirPath}\\goodtables";
-                //CommandLineProcess pro = new CommandLineProcess(goodtablesPath, commandLine);
-                //// if error display errors and exit
-                //if (pro.Status.Equals(CommandLineProcess.StatusCode.Error))
-                //{
-                //    Console.WriteLine($"GoodTables Validation error\n\n{pro.StandardOut}{pro.StandardError}\nExiting program please check that the data is valid.");
-                //    Console.ReadKey();
-                //    Environment.Exit(1);
-                //}
-                //// if the goodtables.exe file isn't found display message and exit
-                //else if (pro.Status.Equals(CommandLineProcess.StatusCode.FileNotFound))
-                //{
-                //    Console.WriteLine("File not found. Please make sure you have installed python and goodtables.\n"
-                //        +"Check that the folder path for goodtables.exe is added to an environment variable named GOODTABLES_PATH.\n"
-                //        +"Press any key to continue.");
-                //    Console.ReadKey();
-                //    Environment.Exit(1);
-                //}
-                //else
-                //{
-                //    Console.WriteLine($"GoodTables validation\n\n{pro.StandardOut}");
-                //
-                // This will send the completed tsv back to github
-                github.SendFileAsync(mainFile.ToString(true), "data/metabolitedata.tsv");
-
-                // send Agilent file to github
-                github.SendFileAsync(mainFile.PrintAgilent(), "data/metabolitedataAgilent.tsv");
-                //}
+                return true;
             }
-
-            return true;
-
+            catch (Exception ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Error processing data: " + ex.Message);
+                Console.WriteLine(clsStackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
+                return false;
+            }
         }
 
         private void streamToFile(string fileName, DelimitedFileParser parsedFile)
