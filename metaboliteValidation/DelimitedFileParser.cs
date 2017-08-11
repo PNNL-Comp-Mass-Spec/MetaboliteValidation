@@ -426,36 +426,36 @@ namespace metaboliteValidation
         //    }
         //    return result;
         //}
+
         public override string ToString()
         {
-            var result = "";
-            var firstHead = true;
+            return string.Format("{0} headers and {1} rows", _headers.Count, FullMap.Count);
+        }
+
+        public string ToString(bool useOriginalHeaderCase)
+        {
+            var result = new StringBuilder();
+
             if (_headers != null)
             {
-                foreach (var head in _headers)
-                {
-                    if (!firstHead)
-                        result += _delimiter;
-                    firstHead = false;
-                    result += head;
-                }
+                if (useOriginalHeaderCase)
+                    result.Append(string.Join(_delimiter.ToString(), _headersOriginal));
+                else
+                    result.Append(string.Join(_delimiter.ToString(), _headers));
+
+                result.Append("\n");
             }
+
             foreach (var row in FullMap)
             {
-                if (!firstHead)
-                    result += "\n";
-                firstHead = false;
-                var firstCol = true;
-                foreach (var col in row)
-                {
-                    if (!firstCol)
-                        result += _delimiter;
-                    firstCol = false;
-                    result += col.Value;
-                }
+                var values = (from item in row select item.Value).ToList();
+
+                result.Append(string.Join(_delimiter.ToString(), values));
+                result.Append("\n");
             }
-            return result;
+            return result.ToString();
         }
+
         /// <summary>
         /// Agilent formated
         /// </summary>
