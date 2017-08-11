@@ -297,9 +297,9 @@ namespace MetaboliteValidation
                 //    Console.WriteLine($"GoodTables validation\n\n{pro.StandardOut}");
                 //
                 // This will send the completed tsv back to github
-                github.SendFileAsync(mainFile.ToString(), "data/metabolitedata.tsv");
-                //    // create agelent file
-                // send agelent file to github
+                github.SendFileAsync(mainFile.ToString(true), "data/metabolitedata.tsv");
+
+                // send Agilent file to github
                 github.SendFileAsync(mainFile.PrintAgilent(), "data/metabolitedataAgilent.tsv");
                 //}
             }
@@ -307,7 +307,7 @@ namespace MetaboliteValidation
         private void streamToFile(string fileName, DelimitedFileParser parsedFile)
         {
             StreamWriter warnFile = new StreamWriter(fileName);
-            warnFile.Write(parsedFile.ToString());
+            warnFile.Write(parsedFile.ToString(true));
             warnFile.Close();
         }
         public bool CheckRow(Dictionary<string, string> row, Compound pubChem, CompoundData kegg)
