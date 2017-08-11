@@ -32,9 +32,9 @@ namespace MetaboliteValidation
                             {
                                 resp.EnsureSuccessStatusCode();
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             {
-
+                                // Ignore errors here
                             }
                             string[] comps = resp.Content.ReadAsStringAsync().Result.Split(new string[] { "///\n" }, StringSplitOptions.None).Where(x => !string.IsNullOrEmpty(x)).ToArray();
                             CompoundsMap = new Dictionary<string, CompoundData>();

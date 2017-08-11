@@ -59,9 +59,9 @@ namespace MetaboliteValidation.GithubApi
                 var fileContents = JsonConvert.DeserializeObject<FileContent>(json.Result);
                 return fileContents.GetContent();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine("Error occured when sending file to github.");
+                Console.WriteLine("Error retrieving file from GitHub: " + ex.Message);
             }
             return null;
 
@@ -163,9 +163,9 @@ namespace MetaboliteValidation.GithubApi
                 json.Wait();
                 return GetFileListFromJson(json.Result);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine("Error occured when getting information from github.");
+                Console.WriteLine("Error getting file list from GitHub: " + ex.Message);
             }
             return null;
         }
@@ -252,9 +252,9 @@ namespace MetaboliteValidation.GithubApi
                 var json = PutJson(uri, UploadFileParams(content, sha, path, commitMsg, branch));
                 json.Wait();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine("Error occured when sending file to github.");
+                Console.WriteLine("Error sending file to GitHub: " + ex.Message);
             }
         }
         /**
@@ -310,11 +310,15 @@ namespace MetaboliteValidation.GithubApi
                         {
                             resp.EnsureSuccessStatusCode();
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
                             if (resp.StatusCode == HttpStatusCode.Unauthorized)
                             {
                                 Console.WriteLine("Unauthorized, username, password is incorrect or you don't have access to this repository.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Error sending content to GitHub: " + ex.Message);
                             }
                         }
                         return resp.Content.ReadAsStringAsync().Result;
@@ -342,12 +346,17 @@ namespace MetaboliteValidation.GithubApi
                         {
                             resp.EnsureSuccessStatusCode();
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
                             if (resp.StatusCode == HttpStatusCode.Unauthorized)
                             {
                                 Console.WriteLine("Unauthorized, username, password is incorrect or you don't have access to this repository.");
                             }
+                            else
+                            {
+                                Console.WriteLine("Error retrieving content from GitHub: " + ex.Message);
+                            }
+
                             if (resp.StatusCode == HttpStatusCode.NotFound)
                             {
                                 return null;

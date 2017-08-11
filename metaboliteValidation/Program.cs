@@ -86,21 +86,30 @@ namespace MetaboliteValidation
             Console.WriteLine("Finished.  Press any key to continue.");
             Console.ReadKey();
         }
+
         /// <summary>
         /// Construnctor
         /// </summary>
-        /// <param name="args">The arguments passed in to the program</param>
-        public Program(string[] args,bool ignore)
+        /// <param name="options">Processing options</param>
+        public Program(MetaboliteValidatorOptions options)
         {
-            Init(args, ignore);
+            var success = ProcessMetabolites(options);
+
+            Console.WriteLine();
+
+            if (success)
+                Console.WriteLine("Processing complete");
+            else
+                Console.WriteLine("Processing failed");
+
         }
+
         /// <summary>
         /// Initialization function that controls the program
         /// </summary>
-        /// <param name="args">The file path passed in to the program</param>
-        /// <param name="ignore">If the program should ignore the validation</param>
-        private void Init(string[] args, bool ignore)
-        {
+        /// <param name="options">Processing options</param>
+        /// <returns>True on success, false if an error</returns>
+        private bool ProcessMetabolites(MetaboliteValidatorOptions options)
     {
 
             // init github api interaction with the repo and owner
@@ -200,24 +209,56 @@ namespace MetaboliteValidation
                 }
 
                 file.Close();
-                GoodTables goodtables = new GoodTables(fileToAppend.ToString(), SchemaUrl);
-                if (!goodtables.Response.success) {
-                    //foreach(var result in goodtables.Response.report.results)
-                    //{
-                    //    fileToAppend.Remove(result["0"].result_context[0]);
-                    //}
-                    goodtables.OutputResponse(new StreamWriter("GoodTablesApiOutput.txt"));
+
+                if (fileToAppend.Count() > 0)
+                {
+
+                    Console.WriteLine("Validating data file with GoodTables");
+                    GoodTables goodtables = new GoodTables(fileToAppend.ToString(true), SchemaUrl);
+                    if (!goodtables.Response.success)
+                    {
+                        //foreach(var result in goodtables.Response.report.results)
+                        //{
+                        //    fileToAppend.Remove(result["0"].result_context[0]);
+                        //}
+
+                        goodtables.OutputResponse(new StreamWriter(GOOD_TABLES_WARNING_FILE));
+
+                        Console.WriteLine();
+                        Console.WriteLine("GoodTables reports errors; see " + GOOD_TABLES_WARNING_FILE);
+                        Console.WriteLine("Note that data with N/A in columns that expect a number will be flagged as an error by GoodTables; those errors can be ignored");
+                    }
                 }
-                streamToFile("duplicateRows.tsv", dupRows);
-                streamToFile("WarningFile.tsv", warningRows);
-                streamToFile("NoKeggFile.tsv", missingKegg);
+
+                streamToFile(DUPLICATE_ROWS_FILE, dupRows);
+                streamToFile(WARNING_ROWS_FILE, warningRows);
+                streamToFile(MISSING_KEGG_FILE, missingKegg);
+
+                if (warningRows.Count() > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Warnings were encountered; see file " + WARNING_ROWS_FILE);
+                }
+
+                if (missingKegg.Count() > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Warnings were encountered; see file " + MISSING_KEGG_FILE);
+                }
+
             }
             else
             {
+                Console.WriteLine();
                 Console.WriteLine("Ignoring validation, skipping to file upload.");
             }
 
-            if (fileToAppend.Count() > 0)
+            if (fileToAppend.Count() == 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine("No new compounds were found; see {0} for the {1} skipped compounds", DUPLICATE_ROWS_FILE, duplicateRowCount);
+            }
+            else
             {
                 // this will add the new data tsv to the existing tsv downloaded from github
                 mainFile.Concat(fileToAppend);
@@ -374,8 +415,11 @@ namespace MetaboliteValidation
                 // if error set status code
                 if (!process.ExitCode.Equals(0)) Status = StatusCode.Error;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                Console.WriteLine("Error starting the process: " + ex.Message);
+                Console.WriteLine(clsStackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
+
                 // exception from process starting
                 Status = StatusCode.FileNotFound;
             }

@@ -38,11 +38,15 @@ namespace MetaboliteValidation.GoodTableResponse
                         {
                             resp.EnsureSuccessStatusCode();
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
                             if (resp.StatusCode == HttpStatusCode.Unauthorized)
                             {
                                 Console.WriteLine("Unauthorized, username, password is incorrect or you don't have access to this repository.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Error sending content to GoodTables: " + ex.Message);
                             }
                         }
                         Response = JsonConvert.DeserializeObject<Response>(resp.Content.ReadAsStringAsync().Result);
