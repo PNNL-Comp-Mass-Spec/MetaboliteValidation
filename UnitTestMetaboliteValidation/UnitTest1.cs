@@ -1,13 +1,14 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 using MetaboliteValidation;
+using NUnit.Framework;
 
 namespace UnitTestMetaboliteValidation
 {
-    [TestClass]
+    [TestFixture]
     public class UnitTest1
     {
-        [TestMethod]
+        [Test]
         public void DelimitedFileParser_Headers()
         {
             var aStr = "a,b,c\n1,2,3\n4,5,6";
@@ -21,7 +22,7 @@ namespace UnitTestMetaboliteValidation
                 Assert.AreEqual(b.GetHeaders()[i], a.GetHeaders()[i]);
             }
         }
-        [TestMethod]
+        [Test]
         public void DelimitedFileParser_GetAt()
         {
             var aStr = "a,b,c\n1,2,3\n4,5,6";
@@ -29,7 +30,7 @@ namespace UnitTestMetaboliteValidation
             a.ParseString(aStr);
             Assert.AreEqual("3", a.GetAt(0,2));
         }
-        [TestMethod]
+        [Test]
         public void DelimitedFileParser_GetAtIndexOutOfRange()
         {
             var aStr = "a,b,c\n1,2,3\n4,5,6";
@@ -37,15 +38,15 @@ namespace UnitTestMetaboliteValidation
             a.ParseString(aStr);
             Assert.ThrowsException<IndexOutOfRangeException>(() => a.GetAt(0, 7));
         }
-        [TestMethod]
+        [Test]
         public void DelimitedFileParser_ToString()
         {
             var aStr = "a,b,c\n1,2,3\n4,5,6";
             var a = new DelimitedFileParser();
             a.ParseString(aStr);
-            Assert.AreEqual(aStr, a.ToString());
+            Assert.AreEqual(aStr, a.ToString(true));
         }
-        [TestMethod]
+        [Test]
         public void DelimitedFileParser_Concat()
         {
             var aStr = "a,b,c\n1,2,3\n4,5,6";
@@ -59,7 +60,7 @@ namespace UnitTestMetaboliteValidation
             Assert.IsTrue(success);
             Assert.AreEqual(fStr, a.ToString());
         }
-        [TestMethod]
+        [Test]
         public void DelimitedFileParser_ConcatFail()
         {
             var aStr = "a,b\n1,2,3\n4,5,6";
@@ -72,7 +73,7 @@ namespace UnitTestMetaboliteValidation
             Assert.IsFalse(success);
             Assert.AreEqual(aStr, a.ToString());
         }
-        [TestMethod]
+        [Test]
         public void DelimitedFileParser_PrintAgelent()
         {
             var aStr = "###Formula\tMass\tCompound name\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n"
