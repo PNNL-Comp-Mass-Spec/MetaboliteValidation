@@ -103,7 +103,8 @@ namespace MetaboliteValidation
         {
 
             // init github api interaction with the repo and owner
-            var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec");
+            var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec", options.Preview);
+
             // get main data file from github
             var dataFile = github.GetFile("data/metabolitedata.tsv");
             // if (dataFile == null) Environment.Exit(1);

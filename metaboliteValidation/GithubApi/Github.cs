@@ -25,13 +25,18 @@ namespace MetaboliteValidation.GithubApi
         public string Owner { get; set; }
         public string Branch { get; set; }
         private string githubApiBase = "https://api.github.com";
+
+        private bool PreviewMode { get; }
+
         private const string ApplicationJson = "application/json";
         protected const string GithubV3Accept = "application/vnd.github.v3.raw+json";
-        public Github(string repo, string owner, string branch= "master")
+
+        public Github(string repo, string owner, bool previewMode = false, string branch= "master")
         {
             Owner = owner;
             Repo = repo;
             Branch = branch;
+            PreviewMode = previewMode;
         }
         /**
          * <summary>This function will get the file as a string</summary>
@@ -201,6 +206,32 @@ namespace MetaboliteValidation.GithubApi
          */
         public void SendFileAsync(string content, string path, string commitMsg = "Updated data", string branch = "master")
         {
+            if (PreviewMode)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Preview of data to push to GitHub");
+
+                var contentRows = content.Split(new[] {'\r', '\n'}, 10);
+
+                var rowsPreviewed = 0;
+                foreach (var dataRow in contentRows)
+                {
+                    if (string.IsNullOrWhiteSpace(dataRow))
+                        continue;
+
+                    if (dataRow.Length < 80)
+                        Console.WriteLine(dataRow);
+                    else
+                        Console.WriteLine(dataRow.Substring(0, 77) + " ...");
+
+                    rowsPreviewed++;
+                    if (rowsPreviewed >= 5)
+                        break;
+                }
+
+                return;
+            }
+
             if (String.IsNullOrEmpty(Username) || String.IsNullOrEmpty(Password))
             {
                 GetUserPass();
