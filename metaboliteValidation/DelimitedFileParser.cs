@@ -138,19 +138,41 @@ namespace metaboliteValidation
                 lines = temp.ToArray();
                 _rowLength--;
             }
+
+            var rowNumber = 1;
+
             for (var i = 0; i < lines.Length; i++)
             {
+                rowNumber++;
+
                 // ignore empty rows
-                if (lines[i].Length <= 0) continue;
+                if (lines[i].Length <= 0)
+                    continue;
+
                 Dictionary<string, string> tempMap = new Dictionary<string, string>();
-                var str = lines[i].Split(this._delimiter);
-                for(var j = 0;j < _headers.Length;j++)
+                var rowData = lines[i].Split(this._delimiter).ToList();
+
+                if (rowData.Count < _headers.Count)
                 {
-                    tempMap.Add(_headers[j], str[j].Trim().Trim('\uFFFD'));
+                    Console.WriteLine("Warning, row {0} has fewer columns than expected: {1} vs. {2}",
+                        rowNumber, rowData.Count, _headers.Count);
+
+                    // Append the remaining columns
+                    while (rowData.Count < _headers.Count)
+                    {
+                        rowData.Add(string.Empty);
+                    }
+
+                }
+
+                for (var j = 0; j < _headers.Count; j++)
+                {
+                    tempMap.Add(_headers[j], rowData[j].Trim().Trim('\uFFFD'));
                     if (!ReverseMap.ContainsKey(_headers[j]))
                         ReverseMap.Add(_headers[j], new List<string>());
-                    ReverseMap[_headers[j]].Add(str[j].Trim().Trim('\uFFFD'));
+                    ReverseMap[_headers[j]].Add(rowData[j].Trim().Trim('\uFFFD'));
                 }
+
                 FullMap.Add(tempMap);
             }
         }
