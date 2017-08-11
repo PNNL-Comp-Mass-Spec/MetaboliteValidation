@@ -407,7 +407,7 @@ namespace metaboliteValidation
         //        var tempStr = row[_headerInverse["formula"]]+"\t"
         //            + row[_headerInverse["mass"]] + "\t"
         //            + row[_headerInverse["Neutral Name"]] + "\t"
-        //                 + row[_headerInverse["kegg"]] + "\t"
+        //                 + row[_headerInverse["KEGG"]] + "\t"
         //                 + row[_headerInverse["cas"]];
         //        foreach (var key in adduct.Keys)
         //        {

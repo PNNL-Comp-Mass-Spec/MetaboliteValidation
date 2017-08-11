@@ -83,17 +83,17 @@ namespace metaboliteValidation
         /// <param name="ignore">If the program should ignore the validation</param>
         private void Init(string[] args, bool ignore)
         {
-            
+
             // init github api interaction with the repo and owner
             var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec");
-            // get main data file from github 
+            // get main data file from github
             var dataFile = github.GetFile("data/metabolitedata.tsv");
             // if (dataFile == null) Environment.Exit(1);
             // strings to run good tables in the command line
             string userDirPath = Environment.GetEnvironmentVariable("goodtables_path");
             string commandLine = $"schema \"{args[0]}\" --schema \"{SchemaUrl}\"";
             string goodtablesPath = $"{userDirPath}\\goodtables";
-            
+
             // parse the new data to append to current data
             DelimitedFileParser fileToAppend = new DelimitedFileParser();
             fileToAppend.ParseFile(args[0], '\t');
@@ -109,13 +109,13 @@ namespace metaboliteValidation
             {
                 mainFile.ParseString(dataFile, '\t');
             }
-                
+
 
             if (!ignore)
             {
                 // get ids for kegg and pubchem
-                List<string> keggIds = fileToAppend.GetColumnAt("kegg").Where(x => !string.IsNullOrEmpty(x)).ToList();
-                List<string> cidIds = fileToAppend.GetColumnAt("cid").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                List<string> keggIds = fileToAppend.GetColumnAt("KEGG").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                List<string> cidIds = fileToAppend.GetColumnAt("PubChem CID").Where(x => !string.IsNullOrEmpty(x)).ToList();
                 List<string> mainCasIds = mainFile.GetColumnAt("cas").Where(x => !string.IsNullOrEmpty(x)).ToList();
                 // generate pubchem and kegg utils
                 PubchemUtil pub = new PubchemUtil(cidIds.ToArray());
@@ -137,9 +137,9 @@ namespace metaboliteValidation
                 {
                     Compound p = null;
                     CompoundData k = null;
-                    if (!string.IsNullOrEmpty(dataMap[i]["cid"]))
-                        p = pub.PubChemMap[int.Parse(dataMap[i]["cid"])];
-                    if (!string.IsNullOrEmpty(dataMap[i]["kegg"])&& kegg.CompoundsMap.ContainsKey(dataMap[i]["kegg"]))
+                    if (!string.IsNullOrEmpty(dataMap[i]["pubchem cid"]))
+                        p = pub.PubChemMap[int.Parse(dataMap[i]["pubchem cid"])];
+                    if (!string.IsNullOrEmpty(dataMap[i]["kegg"]) && kegg.CompoundsMap.ContainsKey(dataMap[i]["kegg"]))
                         k = kegg.CompoundsMap[dataMap[i]["kegg"]];
                     if (mainCasIds.Contains(dataMap[i]["cas"]))
                     {
@@ -205,7 +205,7 @@ namespace metaboliteValidation
                 //else
                 //{
                 //    Console.WriteLine($"GoodTables validation\n\n{pro.StandardOut}");
-                //    
+                //
                 // This will send the completed tsv back to github
                 github.SendFileAsync(mainFile.ToString(), "data/metabolitedata.tsv");
                 //    // create agelent file
@@ -264,7 +264,7 @@ namespace metaboliteValidation
         private string printPubChem(Compound p)
         {
             if (p != null)
-                return $"{"PubChem",10}{p.getId(),10}" + 
+                return $"{"PubChem",10}{p.getId(),10}" +
                     $"{(int)p.findProp("MonoIsotopic").fval,20}" +
                     $"{p.findProp("Molecular Formula").sval,20}{"No Cas Information",20}\n";
             return "No PubChem\n";
@@ -272,7 +272,7 @@ namespace metaboliteValidation
         private string printKegg(CompoundData k)
         {
             if (k != null)
-                return $"{"Kegg",10}{k.KeggId,10}" +
+                return $"{"KEGG",10}{k.KeggId,10}" +
                     $"{(int)k.ExactMass,20}" +
                     $"{k.Formula,20}{k.OtherId("CAS"),20}\n";
             return "No Kegg\n";
@@ -282,7 +282,7 @@ namespace metaboliteValidation
             return $"{$"Row {rowIndex}",10}{"ID",10}{"Mass",20}{"Formula",20}{"CAS",20}\n";
         }
     }
-    
+
     /// <summary>
     /// Simple class to run a command line process and get more feed back for handling issues
     /// </summary>
@@ -341,7 +341,7 @@ namespace metaboliteValidation
                 // exception from process starting
                 Status = StatusCode.FileNotFound;
             }
-            
+
         }
     }
 }
