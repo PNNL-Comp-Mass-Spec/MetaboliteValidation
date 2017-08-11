@@ -58,7 +58,7 @@ namespace metaboliteValidation.GithubApi
                 Console.WriteLine("Error occured when sending file to github.");
             }
             return null;
-           
+
         }
         /**
          *  <summary>This function uses the console to collect the username and password for github from the user</summary>
@@ -199,7 +199,7 @@ namespace metaboliteValidation.GithubApi
          * <param name="content">The contents of the file to send to github</param>
          * <param name="path">The relative path for the file in github repository</param>
          */
-        public void SendFileAsync(string content, string path, string commitMsg = "New Commit", string branch = "master")
+        public void SendFileAsync(string content, string path, string commitMsg = "Updated data", string branch = "master")
         {
             if (String.IsNullOrEmpty(Username) || String.IsNullOrEmpty(Password))
             {
@@ -315,7 +315,7 @@ namespace metaboliteValidation.GithubApi
                         }
                         return resp.Content.ReadAsStringAsync().Result;
                     }
-                    
+
                 }
             }
         }
