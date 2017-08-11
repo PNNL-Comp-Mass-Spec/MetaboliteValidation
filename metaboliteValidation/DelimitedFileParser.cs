@@ -19,10 +19,18 @@ namespace metaboliteValidation
         /// </summary>
         private readonly List<string> _headersOriginal = new List<string>();
 
-
+        [Obsolete("No longer used")]
         private string[][] _full;
+
+        [Obsolete("No longer used")]
         private string[][] _reverse;
+
+        /// <summary>
+        /// Full list of loaded data, with one dictionary per row
+        /// </summary>
+        /// <remarks>In the dictionary, keys are column names and values are column data</remarks>
         public readonly List<Dictionary<string, string>> FullMap = new List<Dictionary<string, string>>();
+
         public readonly Dictionary<string, List<string>> ReverseMap = new Dictionary<string, List<string>>();
         private int _columnLength;
         private int _rowLength;
@@ -70,6 +78,7 @@ namespace metaboliteValidation
         /// <param name="header">
         /// Boolean if the first row is a header
         /// </param>
+        [Obsolete("No longer used")]
         private void Parse(string content, char delimiter, bool header)
         {
             // remove return carrage symbol
@@ -303,18 +312,24 @@ namespace metaboliteValidation
         {
             return this._headerInverse;
         }
+
+        [Obsolete("No longer used")]
         public string[] GetRow(int index)
         {
             if (index < 0 || index >= _full.Length)
                 throw new IndexOutOfRangeException();
             return _full[index];
         }
+
+        [Obsolete("No longer used")]
         public string[] GetCol(int index)
         {
             if (index < 0 || index >= _reverse.Length)
                 throw new IndexOutOfRangeException();
             return _reverse[index];
         }
+
+        [Obsolete("No longer used")]
         public string[] GetCol(string colName)
         {
             if(_headerInverse.ContainsKey(colName))
@@ -330,22 +345,29 @@ namespace metaboliteValidation
         {
             return _headersOriginal;
         }
+
+        [Obsolete("Use GetMap instead")]
         public string GetAt(int row, int col)
         {
             return _full[row][col];
         }
+
         public int ColumnSize()
         {
             return this._columnLength;
         }
+
         public int RowSize()
         {
             return this._rowLength;
         }
+
+        [Obsolete("Use GetMap instead")]
         public string[][] GetRows()
         {
             return _full;
         }
+
         /// <summary>This function will compare two string arrays presuming they are the headers</summary>
         /// <param name="a">The left side of the compare</param>
         /// <param name="b">The right side of the compare</param>

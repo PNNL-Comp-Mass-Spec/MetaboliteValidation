@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 
 namespace metaboliteValidation
 {
+    [Obsolete("No longer used")]
     public class ValidatePubchem
     {
         private readonly Dictionary<int, Property> _pubchem;
         private readonly DelimitedFileParser _parser;
         private readonly List<string> _errorReport = new List<string>();
+        
         public ValidatePubchem(Dictionary<int, Property> pubchem, DelimitedFileParser parser)
         {
             this._pubchem = pubchem;
