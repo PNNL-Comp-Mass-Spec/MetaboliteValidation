@@ -18,7 +18,7 @@ namespace metaboliteValidation
         private int _rowLength;
         private char _delimiter;
         private readonly Dictionary<string, int> _headerInverse = new Dictionary<string, int>();
-        public DelimitedFileParser() 
+        public DelimitedFileParser()
         {
             _delimiter = ',';
         }
@@ -90,7 +90,7 @@ namespace metaboliteValidation
                 _rowLength--;
             }
             this._columnLength = lines[0].Split(this._delimiter).Length;
-            
+
 
             var iLength = lines.Length;
             var jLength = lines[0].Split(this._delimiter).Length;
@@ -211,7 +211,16 @@ namespace metaboliteValidation
         }
         public List<string> GetColumnAt(string key)
         {
-            return ReverseMap[key];
+            try
+            {
+                return ReverseMap[key];
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Key not found {0}",  key);
+                throw;
+            }
+
         }
         public Dictionary<string, int> GetHeaderMap()
         {
@@ -291,7 +300,7 @@ namespace metaboliteValidation
         //        _full = replacement;
         //        return true;
         //    }
-        //    return false;            
+        //    return false;
         //}
         public bool Concat(DelimitedFileParser a)
         {
@@ -406,9 +415,9 @@ namespace metaboliteValidation
         //            {
         //                result += tempStr + "\t" + adduct[key]["polarity"] + "\t" + adduct[key]["display"] + "\t" +
         //                          row[_headerInverse[key]]+"\t\tN2\t\t\n";
-        //            }  
+        //            }
         //        }
-                
+
         //    }
         //    return result;
         //}
