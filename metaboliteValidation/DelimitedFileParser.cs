@@ -19,10 +19,11 @@ namespace metaboliteValidation
         /// </summary>
         private readonly List<string> _headersOriginal = new List<string>();
 
+
         private string[][] _full;
         private string[][] _reverse;
-        public List<Dictionary<string, string>> FullMap = new List<Dictionary<string, string>>();
-        public Dictionary<string, List<string>> ReverseMap = new Dictionary<string, List<string>>();
+        public readonly List<Dictionary<string, string>> FullMap = new List<Dictionary<string, string>>();
+        public readonly Dictionary<string, List<string>> ReverseMap = new Dictionary<string, List<string>>();
         private int _columnLength;
         private int _rowLength;
         private char _delimiter;
@@ -32,7 +33,7 @@ namespace metaboliteValidation
             _delimiter = ',';
         }
         ///
-        /// <summary>This function will parse a dilimited string</summary>
+        /// <summary>This function will parse a delimited string</summary>
         /// <param name="content">The delimited string</param>
         /// <param name="delimiter">The character used for dilimiting the string</param>
         /// <param name="header">Boolean if the first row is a header</param>
@@ -42,7 +43,7 @@ namespace metaboliteValidation
             Serialize(content, delimiter, header);
         }
         ///
-        /// <summary>This function will parse a dilimited file by reading the file to a string</summary>
+        /// <summary>This function will parse a delimited file by reading the file to a string</summary>
         /// <param name="content">The path to the delimited file</param>
         /// <param name="delimiter">The character used for dilimiting the string</param>
         /// <param name="header">Boolean if the first row is a header</param>
@@ -58,7 +59,7 @@ namespace metaboliteValidation
             Serialize(content, delimiter, header);
         }
         /// <summary>
-        /// Private function will parse a dilimited string
+        /// Private function will parse a delimited string
         /// </summary>
         /// <param name="content">
         /// The delimited string
@@ -78,7 +79,7 @@ namespace metaboliteValidation
             _rowLength = lines.Length;
             // track column types?
 
-            // if header. track headers in dilimited file
+            // if header. track headers in delimited file
             if (header)
             {
                 SetHeaders(lines[0].Split(_delimiter));
@@ -246,7 +247,7 @@ namespace metaboliteValidation
 
         internal int Count()
         {
-            return FullMap.Count();
+            return FullMap.Count;
         }
 
         internal void Remove(Dictionary<string, string> a)
@@ -291,7 +292,7 @@ namespace metaboliteValidation
             {
                 return ReverseMap[key];
             }
-            catch (Exception ex)
+            catch (KeyNotFoundException)
             {
                 Console.WriteLine("Key not found {0}",  key);
                 throw;
@@ -395,10 +396,17 @@ namespace metaboliteValidation
                 }
                 return true;
             }
+
+            Console.WriteLine();
+            Console.WriteLine("Concatenation of new records failed; header name mismatch");
+            Console.WriteLine("New data:      " + string.Join(", ", a.GetHeaders()));
+            Console.WriteLine("Existing data: " + string.Join(", ", _headers));
+
             return false;
         }
-        /// <summary>Converts to a dilimited string using the provided delimiter</summary>
-        /// <returns>A dilimited string</returns>
+
+        /// <summary>Converts to a delimited string using the provided delimiter</summary>
+        /// <returns>A delimited string</returns>
         //public override string ToString()
         //{
         //    var result = "";
@@ -459,7 +467,7 @@ namespace metaboliteValidation
         /// <summary>
         /// Agilent formated
         /// </summary>
-        /// <returns>A string of the data formated for agelent software.</returns>
+        /// <returns>A string of the data formated for Agilent software.</returns>
         //public string PrintAgilent()
         //{
         //    var headers = "###Formula\tMass\tCompound name\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n"
