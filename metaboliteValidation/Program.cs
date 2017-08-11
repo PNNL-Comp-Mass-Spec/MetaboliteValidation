@@ -261,7 +261,13 @@ namespace MetaboliteValidation
             else
             {
                 // this will add the new data tsv to the existing tsv downloaded from github
-                mainFile.Concat(fileToAppend);
+                var success = mainFile.Concat(fileToAppend);
+
+                if (!success)
+                {
+                    // Concatenation of new records failed; do not upload
+                    return false;
+                }
 
                 // start command line process for goodtables
                 //CommandLineProcess pro = new CommandLineProcess(goodtablesPath, commandLine);
