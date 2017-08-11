@@ -144,6 +144,8 @@ namespace MetaboliteValidation
             // parse the new data to append to current data
             DelimitedFileParser fileToAppend = new DelimitedFileParser();
             fileToAppend.ParseFile(args[0], '\t');
+            // Update column names if necessary
+            UpdateHeaders(fileToAppend);
 
             // parse the main data file from github
             DelimitedFileParser mainFile = new DelimitedFileParser();
@@ -156,6 +158,9 @@ namespace MetaboliteValidation
             {
                 mainFile.ParseString(dataFile, '\t');
             }
+
+            // Update column names if necessary
+            UpdateHeaders(mainFile);
 
 
             if (!ignore)
@@ -334,6 +339,31 @@ namespace MetaboliteValidation
             return rowFormula == pubFormula
                 && rowMass == (int)pubMass;
         }
+
+        private void UpdateHeaders(DelimitedFileParser fileToAppend)
+        {
+            var currentHeaders = fileToAppend.GetHeaders();
+
+            // Dictionary mapping old header names to new header names
+            var headerMapping = new Dictionary<string, string>();
+
+            foreach (var header in currentHeaders)
+            {
+                switch (header.ToLower())
+                {
+                    case "cid":
+                        headerMapping.Add(header, "PubChem CID");
+                        break;
+                }
+            }
+
+            if (headerMapping.Count > 0)
+            {
+                fileToAppend.UpdateHeaders(headerMapping);
+            }
+
+        }
+
         private void WriteContentToFile(StreamWriter file, Dictionary<string, string> row, Compound pubChem, CompoundData kegg, int rowIndex)
         {
             file.Write(printHead(rowIndex));
