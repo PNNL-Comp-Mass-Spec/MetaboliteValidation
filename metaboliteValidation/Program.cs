@@ -28,7 +28,7 @@ namespace MetaboliteValidation
         /// The main function to run the program
         /// </summary>
         /// <param name="args">Passed in arguments to the program</param>
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
             var asmName = typeof(Program).GetTypeInfo().Assembly.GetName();
             var exeName = Path.GetFileName(Assembly.GetExecutingAssembly().Location);       // Alternatively: System.AppDomain.CurrentDomain.FriendlyName
@@ -81,10 +81,13 @@ namespace MetaboliteValidation
                 Console.WriteLine($"See help with {exeName} --help");
                 return -1;
             }
-            new Program(extra.ToArray(), ignore);
-            // exit program
-            Console.WriteLine("Finished.  Press any key to continue.");
-            Console.ReadKey();
+
+
+            var program = new Program(parseResults.ParsedResults);
+
+            System.Threading.Thread.Sleep(1500);
+
+            return 0;
         }
 
         /// <summary>
@@ -304,7 +307,11 @@ namespace MetaboliteValidation
                 github.SendFileAsync(mainFile.PrintAgilent(), "data/metabolitedataAgilent.tsv");
                 //}
             }
+
+            return true;
+
         }
+
         private void streamToFile(string fileName, DelimitedFileParser parsedFile)
         {
             StreamWriter warnFile = new StreamWriter(fileName);
