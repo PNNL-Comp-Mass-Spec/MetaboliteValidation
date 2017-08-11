@@ -138,15 +138,11 @@ namespace MetaboliteValidation
 
             // get main data file from github
             var dataFile = github.GetFile("data/metabolitedata.tsv");
-            // if (dataFile == null) Environment.Exit(1);
-            // strings to run good tables in the command line
-            string userDirPath = Environment.GetEnvironmentVariable("goodtables_path");
-            string commandLine = $"schema \"{args[0]}\" --schema \"{SchemaUrl}\"";
-            string goodtablesPath = $"{userDirPath}\\goodtables";
 
             // parse the new data to append to current data
             DelimitedFileParser fileToAppend = new DelimitedFileParser();
-            fileToAppend.ParseFile(args[0], '\t');
+            fileToAppend.ParseFile(options.InputFile, '\t');
+
             // Update column names if necessary
             UpdateHeaders(fileToAppend);
 
@@ -166,7 +162,7 @@ namespace MetaboliteValidation
             UpdateHeaders(mainFile);
 
 
-            if (!ignore)
+            if (!options.IgnoreErrors)
             {
                 // get ids for kegg and pubchem
                 List<string> keggIds = fileToAppend.GetColumnAt("KEGG").Where(x => !string.IsNullOrEmpty(x)).ToList();
@@ -279,6 +275,10 @@ namespace MetaboliteValidation
                 }
 
                 // start command line process for goodtables
+                //
+                // string userDirPath = Environment.GetEnvironmentVariable("goodtables_path");
+                // string commandLine = $"schema \"{options.InputFile}\" --schema \"{SchemaUrl}\"";
+                // string goodtablesPath = $"{userDirPath}\\goodtables";
                 //CommandLineProcess pro = new CommandLineProcess(goodtablesPath, commandLine);
                 //// if error display errors and exit
                 //if (pro.Status.Equals(CommandLineProcess.StatusCode.Error))
