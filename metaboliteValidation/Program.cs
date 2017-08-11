@@ -101,9 +101,28 @@ namespace MetaboliteValidation
         /// <param name="ignore">If the program should ignore the validation</param>
         private void Init(string[] args, bool ignore)
         {
+    {
 
             // init github api interaction with the repo and owner
             var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec", options.Preview);
+
+            if (!string.IsNullOrEmpty(options.Username))
+            {
+                github.Username = options.Username;
+
+                if (!string.IsNullOrEmpty(options.Password))
+                {
+                    if (options.Password.StartsWith("*"))
+                    {
+                        github.Password = MetaboliteValidatorOptions.DecodePassword(options.Password.Substring(1));
+                    }
+                    else
+                    {
+                        github.Password = options.Password;
+                    }
+
+                }
+            }
 
             // get main data file from github
             var dataFile = github.GetFile("data/metabolitedata.tsv");

@@ -46,10 +46,11 @@ namespace MetaboliteValidation.GithubApi
          */
         public string GetFile(string path)
         {
-            if (String.IsNullOrEmpty(Username) || String.IsNullOrEmpty(Password))
+            if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
             {
                 GetUserPass();
             }
+
             var uri = GetUriForContent(Repo, Owner, path);
             try
             {
@@ -70,9 +71,17 @@ namespace MetaboliteValidation.GithubApi
          */
         private void GetUserPass()
         {
-            Console.Write("Username: ");
-            Username = GetUserName();
-            Console.Write("Password: ");
+            if (string.IsNullOrEmpty(Username))
+            {
+                Console.Write("Username: ");
+                Username = GetUserName();
+                Console.Write("Password: ");
+            }
+            else
+            {
+                Console.Write($"Password for {Username}: ");
+            }
+
             IntPtr valuePtr = IntPtr.Zero;
             valuePtr = Marshal.SecureStringToGlobalAllocUnicode(GetPassword());
             Password = Marshal.PtrToStringUni(valuePtr);
