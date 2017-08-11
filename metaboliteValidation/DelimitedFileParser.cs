@@ -275,10 +275,15 @@ namespace metaboliteValidation
             }
         }
 
+        /// <summary>
+        /// Retrieve the complete set of loaded data
+        /// </summary>
+        /// <returns>Dictionary where </returns>
         public List<Dictionary<string, string>> GetMap()
         {
             return FullMap;
         }
+
         public Dictionary<string, string> GetAt(int index)
         {
             return FullMap[index];
@@ -336,6 +341,7 @@ namespace metaboliteValidation
                 return _reverse[_headerInverse[colName]];
             return null;
         }
+
         public List<string> GetHeaders()
         {
             return _headers;
@@ -472,17 +478,16 @@ namespace metaboliteValidation
                     result.Append(string.Join(_delimiter.ToString(), _headersOriginal));
                 else
                     result.Append(string.Join(_delimiter.ToString(), _headers));
-
-                result.Append("\n");
             }
 
             foreach (var row in FullMap)
             {
-                var values = (from item in row select item.Value).ToList();
-
-                result.Append(string.Join(_delimiter.ToString(), values));
                 result.Append("\n");
+
+                var values = (from item in row select item.Value).ToList();
+                result.Append(string.Join(_delimiter.ToString(), values));
             }
+
             return result.ToString();
         }
 
