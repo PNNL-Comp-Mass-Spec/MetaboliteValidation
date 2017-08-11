@@ -16,7 +16,7 @@ namespace UnitTestMetaboliteValidation
             var b = new DelimitedFileParser();
             a.ParseString(aStr);
             b.ParseString(aStr);
-            var size = a.GetHeaders().Length;
+            var size = a.GetHeaders().Count;
             for (var i = 0; i < size; i++)
             {
                 Assert.AreEqual(b.GetHeaders()[i], a.GetHeaders()[i]);
@@ -28,7 +28,10 @@ namespace UnitTestMetaboliteValidation
             var aStr = "a,b,c\n1,2,3\n4,5,6";
             var a = new DelimitedFileParser();
             a.ParseString(aStr);
-            Assert.AreEqual("3", a.GetAt(0,2));
+
+            var dataMap = a.GetMap();
+
+            Assert.AreEqual("3", dataMap[0]["c"]);
         }
         [Test]
         public void DelimitedFileParser_GetAtIndexOutOfRange()
@@ -36,7 +39,10 @@ namespace UnitTestMetaboliteValidation
             var aStr = "a,b,c\n1,2,3\n4,5,6";
             var a = new DelimitedFileParser();
             a.ParseString(aStr);
-            Assert.ThrowsException<IndexOutOfRangeException>(() => a.GetAt(0, 7));
+
+            var dataMap = a.GetMap();
+
+            Assert.Throws<KeyNotFoundException>(() => Console.WriteLine(dataMap[0]["f"]));
         }
         [Test]
         public void DelimitedFileParser_ToString()
@@ -58,12 +64,14 @@ namespace UnitTestMetaboliteValidation
             b.ParseString(bStr);
             var success = a.Concat(b);
             Assert.IsTrue(success);
-            Assert.AreEqual(fStr, a.ToString());
+            Assert.AreEqual(fStr, a.ToString(true));
         }
         [Test]
         public void DelimitedFileParser_ConcatFail()
         {
             var aStr = "a,b\n1,2,3\n4,5,6";
+            var aStrReturned = "a,b\n1,2\n4,5";
+
             var bStr = "a,b,c\n7,8,9\n10,11,12";
             var a = new DelimitedFileParser();
             var b = new DelimitedFileParser();
@@ -71,7 +79,7 @@ namespace UnitTestMetaboliteValidation
             b.ParseString(bStr);
             var success = a.Concat(b);
             Assert.IsFalse(success);
-            Assert.AreEqual(aStr, a.ToString());
+            Assert.AreEqual(aStrReturned, a.ToString(true));
         }
         [Test]
         public void DelimitedFileParser_PrintAgelent()
