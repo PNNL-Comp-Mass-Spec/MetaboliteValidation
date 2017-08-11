@@ -9,7 +9,16 @@ namespace metaboliteValidation
 {
     public class DelimitedFileParser
     {
-        private string[] _headers;
+        /// <summary>
+        /// Header names; stored as lowercase
+        /// </summary>
+        private readonly List<string> _headers = new List<string>();
+
+        /// <summary>
+        /// Header names; stored in the original case
+        /// </summary>
+        private readonly List<string> _headersOriginal = new List<string>();
+
         private string[][] _full;
         private string[][] _reverse;
         public List<Dictionary<string, string>> FullMap = new List<Dictionary<string, string>>();
@@ -72,15 +81,11 @@ namespace metaboliteValidation
             // if header. track headers in dilimited file
             if (header)
             {
-                _headers = lines[0].Split(this._delimiter);
+                SetHeaders(lines[0].Split(_delimiter));
                 var temp = new List<string>(lines);
                 temp.RemoveAt(0);
                 lines = temp.ToArray();
                 _rowLength--;
-                for (var i = 0; i < _headers.Length; i++)
-                {
-                    _headerInverse.Add(_headers[i], i);
-                }
             }
             if (lines[lines.Length - 1].Length == 0)
             {
@@ -116,18 +121,14 @@ namespace metaboliteValidation
         {
             var lines = content.Split('\n');
             _rowLength = lines.Length;
-            // if header. track headers in dilimited file
+            // if header. track headers in delimited file
             if (header)
             {
-                _headers = lines[0].Split(_delimiter).ToList().ConvertAll(x=>x.ToLower().Trim()).ToArray();
+                SetHeaders(lines[0].Split(_delimiter));
                 var temp = new List<string>(lines);
                 temp.RemoveAt(0);
                 lines = temp.ToArray();
                 _rowLength--;
-                for (var i = 0; i < _headers.Length; i++)
-                {
-                    _headerInverse.Add(_headers[i], i);
-                }
             }
             // remove empty last row
             if (lines[lines.Length - 1].Length == 0)
@@ -159,12 +160,65 @@ namespace metaboliteValidation
             _delimiter = v;
         }
 
-        internal void SetHeaders(string[] v)
+        internal void SetHeaders(IEnumerable<string> newHeaders)
         {
-            _headers = v;
-            for (var j = 0; j < _headers.Length; j++)
+            if (ReverseMap.Count > 0)
             {
-                ReverseMap.Add(_headers[j], new List<string>());
+                throw new Exception("Cannot set headers after ReverseMap has been populated; consider using UpdateHeaders instead");
+            }
+
+            _headers.Clear();
+            foreach (var header in newHeaders)
+            {
+                var headerToStore = header.ToLower().Trim();
+                ReverseMap.Add(headerToStore, new List<string>());
+                _headers.Add(headerToStore);
+                _headersOriginal.Add(header);
+            }
+
+            UpdateInverseHeaders();
+        }
+
+        /// <summary>
+        /// Update specific header names
+        /// </summary>
+        /// <param name="headerMapping">Dictionary mapping old name to new name (only include header names that need to change)</param>
+        internal void UpdateHeaders(IReadOnlyDictionary<string, string> headerMapping)
+        {
+            foreach (var mapping in headerMapping)
+            {
+                for (var i = 0; i < _headers.Count; i++)
+                {
+                    var oldHeader = mapping.Key.ToLower();
+                    var newHeader = mapping.Value.ToLower();
+
+                    if (_headers[i] != mapping.Key)
+                        continue;
+
+                    _headers[i] = newHeader;
+
+                    if (ReverseMap.TryGetValue(oldHeader, out var items))
+                    {
+                        ReverseMap.Remove(oldHeader);
+                        ReverseMap.Add(newHeader, items);
+                    }
+                    else
+                    {
+                        ReverseMap.Add(newHeader, new List<string>());
+                    }
+
+                    break;
+                }
+            }
+
+        }
+
+        private void UpdateInverseHeaders()
+        {
+            _headerInverse.Clear();
+            for (var i = 0; i < _headers.Count; i++)
+            {
+                _headerInverse.Add(_headers[i], i);
             }
         }
 
@@ -244,9 +298,14 @@ namespace metaboliteValidation
                 return _reverse[_headerInverse[colName]];
             return null;
         }
-        public string[] GetHeaders()
+        public List<string> GetHeaders()
         {
             return _headers;
+        }
+
+        public List<string> GetHeadersOriginalCase()
+        {
+            return _headersOriginal;
         }
         public string GetAt(int row, int col)
         {
@@ -268,11 +327,12 @@ namespace metaboliteValidation
         /// <param name="a">The left side of the compare</param>
         /// <param name="b">The right side of the compare</param>
         /// <returns>If the two string arrays are the same returns true, false otherwise.</returns>
-        private bool CompareHeaders(string[] a, string[] b)
+        private bool CompareHeaders(IReadOnlyList<string> a, IReadOnlyList<string> b)
         {
-            if (a.Length != b.Length)
+            if (a.Count != b.Count)
                 return false;
-            for(var i =0;i<a.Length;i++)
+
+            for(var i = 0; i < a.Count; i++)
             {
                 if (a[i] != b[i])
                 {
