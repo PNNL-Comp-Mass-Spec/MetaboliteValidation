@@ -19,6 +19,8 @@ namespace metaboliteValidation
             var index = (int)ids.Count() / maxEntries;
             for (int i = 0; i <= index; i++)
             {
+                Console.WriteLine("Retrieving mass and formula info from Kegg: {0} / {1}", i + 1, index + 1);
+
                 var splitIds = ids.ToList().GetRange(i * maxEntries, Math.Min(maxEntries, ids.Count() - i * maxEntries));
                 using (var client = new HttpClient())
                 {

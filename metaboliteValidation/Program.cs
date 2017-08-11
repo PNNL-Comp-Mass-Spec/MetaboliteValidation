@@ -65,7 +65,7 @@ namespace metaboliteValidation
             }
             new Program(extra.ToArray(), ignore);
             // exit program
-            Console.WriteLine("Finished");
+            Console.WriteLine("Finished.  Press any key to continue.");
             Console.ReadKey();
         }
         /// <summary>

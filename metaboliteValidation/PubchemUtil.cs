@@ -19,6 +19,8 @@ namespace metaboliteValidation
             var index = (int)cids.Count() / maxEntries;
             for (int i = 0; i <= index; i++)
             {
+                Console.WriteLine("Retrieving mass and formula info from PubChem: {0} / {1}", i + 1, index + 1);
+
                 var splitCids = cids.ToList().GetRange(i* maxEntries, Math.Min(maxEntries, cids.Count() - i* maxEntries));
 
                 // make request to pubchem website
@@ -37,7 +39,7 @@ namespace metaboliteValidation
                 // convert to a dictionary with cid as key to make comparisons
                 ConverToMap(pubResponse.PC_Compounds);
             }
-           
+
         }
         // converts array to dictionary with cid as key and values as the properties from pubchem
         private void ConverToMap(List<Compound> p)
@@ -107,7 +109,7 @@ namespace metaboliteValidation
     }
     public class Atoms
     {
-        public List<int> aid { get; set; } 
+        public List<int> aid { get; set; }
         public List<int> element { get; set; }
     }
     public class Bonds
