@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace metaboliteValidation.GoodTableResponse
+namespace MetaboliteValidation.GoodTableResponse
 {
     public class ResultMeta
     {

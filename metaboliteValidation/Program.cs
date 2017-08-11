@@ -1,4 +1,3 @@
-﻿using metaboliteValidation.GithubApi;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,10 +10,11 @@ using System.Globalization;
 using System.Net.Http;
 using Newtonsoft.Json;
 using System.Net;
-using metaboliteValidation.GoodTableResponse;
 using NDesk.Options;
+using MetaboliteValidation.GithubApi;
+using MetaboliteValidation.GoodTableResponse;
 
-namespace metaboliteValidation
+namespace MetaboliteValidation
 {
     class Program
     {

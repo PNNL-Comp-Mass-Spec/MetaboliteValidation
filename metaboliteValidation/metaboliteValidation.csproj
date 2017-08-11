@@ -7,8 +7,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7BC96112-7C54-403A-9E55-D0CEBCD5B5D4}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>metaboliteValidation</RootNamespace>
-    <AssemblyName>metaboliteValidation</AssemblyName>
+    <RootNamespace>MetaboliteValidation</RootNamespace>
+    <AssemblyName>MetaboliteValidation</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

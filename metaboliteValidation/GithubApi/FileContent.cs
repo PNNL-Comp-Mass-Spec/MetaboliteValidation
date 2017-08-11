@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace metaboliteValidation.GithubApi
+namespace MetaboliteValidation.GithubApi
 {
     class FileContent
     {

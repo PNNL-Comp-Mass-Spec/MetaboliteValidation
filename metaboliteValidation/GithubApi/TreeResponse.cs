@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace metaboliteValidation.GithubApi
+namespace MetaboliteValidation.GithubApi
 {
     /**
          * json response from github to get a list of files

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace metaboliteValidation.GithubApi
+namespace MetaboliteValidation.GithubApi
 {
     /**
     * json parameters for updating a file in a repository on github

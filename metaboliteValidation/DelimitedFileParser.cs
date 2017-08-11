@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace metaboliteValidation
+namespace MetaboliteValidation
 {
     public class DelimitedFileParser
     {

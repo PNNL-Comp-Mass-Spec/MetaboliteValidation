@@ -7,7 +7,7 @@ using System.Net;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace metaboliteValidation
+namespace MetaboliteValidation
 {
     public class PubchemUtil
     {

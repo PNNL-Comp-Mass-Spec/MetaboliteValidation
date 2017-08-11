@@ -12,7 +12,7 @@ using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace metaboliteValidation.GithubApi
+namespace MetaboliteValidation.GithubApi
 {
     /**
      * <summary>This class is for github api interaction</summary>
