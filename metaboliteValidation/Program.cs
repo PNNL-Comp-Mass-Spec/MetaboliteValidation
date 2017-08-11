@@ -196,6 +196,7 @@ namespace MetaboliteValidation
                     if (mainCasIds.Contains(dataMap[i]["cas"]))
                     {
                         dupRows.Add(dataMap[i]);
+                        fileToAppend.Remove(dataMap[i]);
                     }
                     else
                     {
