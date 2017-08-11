@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,6 +24,13 @@ namespace MetaboliteValidation
         /// This is the url for the goodtables schema located on github
         /// </summary>
         private const string SchemaUrl = "https://raw.githubusercontent.com/PNNL-Comp-Mass-Spec/MetabolomicsCCS/master/metabolitedata-schema.json";
+
+        private const string GOOD_TABLES_WARNING_FILE = "GoodTablesApiOutput.txt";
+
+        private const string DUPLICATE_ROWS_FILE = "DuplicateRows.tsv";
+        private const string WARNING_ROWS_FILE = "WarningFile.tsv";
+        private const string MISSING_KEGG_FILE = "NoKeggFile.tsv";
+
         /// <summary>
         /// The main function to run the program
         /// </summary>
@@ -161,13 +168,15 @@ namespace MetaboliteValidation
             // Update column names if necessary
             UpdateHeaders(mainFile);
 
+            var duplicateRowCount = 0;
 
             if (!options.IgnoreErrors)
             {
                 // get ids for kegg and pubchem
-                List<string> keggIds = fileToAppend.GetColumnAt("KEGG").Where(x => !string.IsNullOrEmpty(x)).ToList();
-                List<string> cidIds = fileToAppend.GetColumnAt("PubChem CID").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                List<string> keggIds = fileToAppend.GetColumnAt("kegg").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                List<string> cidIds = fileToAppend.GetColumnAt("pubchem cid").Where(x => !string.IsNullOrEmpty(x)).ToList();
                 List<string> mainCasIds = mainFile.GetColumnAt("cas").Where(x => !string.IsNullOrEmpty(x)).ToList();
+
                 // generate pubchem and kegg utils
                 PubchemUtil pub = new PubchemUtil(cidIds.ToArray());
                 KeggUtil kegg = new KeggUtil(keggIds.ToArray());
@@ -176,15 +185,19 @@ namespace MetaboliteValidation
                 DelimitedFileParser dupRows = new DelimitedFileParser();
                 dupRows.SetHeaders(fileToAppend.GetHeaders());
                 dupRows.SetDelimiter('\t');
+
                 DelimitedFileParser warningRows = new DelimitedFileParser();
                 warningRows.SetHeaders(fileToAppend.GetHeaders());
                 warningRows.SetDelimiter('\t');
+
                 DelimitedFileParser missingKegg = new DelimitedFileParser();
                 missingKegg.SetHeaders(fileToAppend.GetHeaders());
                 missingKegg.SetDelimiter('\t');
+
                 var dataMap = fileToAppend.GetMap();
+
                 // compare fileToAppend to utils
-                for (var i = dataMap.Count - 1;i >= 0;i--)
+                for (var i = dataMap.Count - 1; i >= 0; i--)
                 {
                     Compound p = null;
                     CompoundData k = null;
@@ -212,6 +225,8 @@ namespace MetaboliteValidation
                         }
                     }
                 }
+
+                duplicateRowCount = dupRows.Count();
 
                 file.Close();
 
