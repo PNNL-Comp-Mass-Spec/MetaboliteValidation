@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace MetaboliteValidation
@@ -32,27 +31,33 @@ namespace MetaboliteValidation
         public readonly List<Dictionary<string, string>> FullMap = new List<Dictionary<string, string>>();
 
         public readonly Dictionary<string, List<string>> ReverseMap = new Dictionary<string, List<string>>();
+
         private int _columnLength;
+
         private int _rowLength;
+
         private char _delimiter;
+
         private readonly Dictionary<string, int> _headerInverse = new Dictionary<string, int>();
+
         public DelimitedFileParser()
         {
             _delimiter = ',';
         }
-        ///
+
         /// <summary>This function will parse a delimited string</summary>
         /// <param name="content">The delimited string</param>
         /// <param name="delimiter">The character used for dilimiting the string</param>
         /// <param name="header">Boolean if the first row is a header</param>
         public void ParseString(string content, char delimiter = ',', bool header = true)
         {
-            this._delimiter = delimiter;
+            _delimiter = delimiter;
             Serialize(content, delimiter, header);
         }
-        ///
+
+
         /// <summary>This function will parse a delimited file by reading the file to a string</summary>
-        /// <param name="content">The path to the delimited file</param>
+        /// <param name="fileName">The path to the delimited file</param>
         /// <param name="delimiter">The character used for dilimiting the string</param>
         /// <param name="header">Boolean if the first row is a header</param>
         public void ParseFile(string fileName, char delimiter = ',', bool header = true)
@@ -62,10 +67,11 @@ namespace MetaboliteValidation
             {
                 throw new FileNotFoundException();
             }
-            this._delimiter = delimiter;
-            string content = File.ReadAllText(fileName);
+            _delimiter = delimiter;
+            var content = File.ReadAllText(fileName);
             Serialize(content, delimiter, header);
         }
+
         /// <summary>
         /// Private function will parse a delimited string
         /// </summary>
@@ -82,7 +88,7 @@ namespace MetaboliteValidation
         private void Parse(string content, char delimiter, bool header)
         {
             // remove return carrage symbol
-            content = content.Replace("\r", String.Empty);
+            content = content.Replace("\r", string.Empty);
             // parse file
             var lines = content.Split('\n');
             _rowLength = lines.Length;
@@ -104,18 +110,18 @@ namespace MetaboliteValidation
                 lines = temp.ToArray();
                 _rowLength--;
             }
-            this._columnLength = lines[0].Split(this._delimiter).Length;
+            _columnLength = lines[0].Split(_delimiter).Length;
 
 
             var iLength = lines.Length;
-            var jLength = lines[0].Split(this._delimiter).Length;
+            var jLength = lines[0].Split(_delimiter).Length;
 
             _full = new string[iLength][];
             _reverse = new string[jLength][];
             for (var i = 0; i < lines.Length; i++)
             {
                 if(lines[i].Length<=0) continue;
-                var str = lines[i].Split(this._delimiter);
+                var str = lines[i].Split(_delimiter);
                 _full[i] = new string[str.Length];
 
                 for (var j = 0; j < str.Length; j++)
@@ -127,6 +133,7 @@ namespace MetaboliteValidation
                 }
             }
         }
+
         public void Serialize(string content, char delimiter, bool header)
         {
             var lines = content.Split('\n');
@@ -151,21 +158,21 @@ namespace MetaboliteValidation
 
             var rowNumber = 1;
 
-            for (var i = 0; i < lines.Length; i++)
+            foreach (var dataRow in lines)
             {
                 rowNumber++;
 
                 // ignore empty rows
-                if (lines[i].Length <= 0)
+                if (dataRow.Length <= 0)
                     continue;
 
-                Dictionary<string, string> tempMap = new Dictionary<string, string>();
-                var rowData = lines[i].Split(this._delimiter).ToList();
+                var tempMap = new Dictionary<string, string>();
+                var rowData = dataRow.Split(_delimiter).ToList();
 
                 if (rowData.Count < _headers.Count)
                 {
                     Console.WriteLine("Warning, row {0} has fewer columns than expected: {1} vs. {2}",
-                        rowNumber, rowData.Count, _headers.Count);
+                                      rowNumber, rowData.Count, _headers.Count);
 
                     // Append the remaining columns
                     while (rowData.Count < _headers.Count)
@@ -288,18 +295,22 @@ namespace MetaboliteValidation
         {
             return FullMap[index];
         }
+
         public string GetPropertyAt(int index, int key)
         {
             return FullMap[index][_headers[key]];
         }
+
         public string GetPropertyAt(int index, string key)
         {
             return FullMap[index][key];
         }
+
         public List<string> GetColumnAt(int index)
         {
             return ReverseMap[_headers[index]];
         }
+
         public List<string> GetColumnAt(string key)
         {
             try
@@ -313,9 +324,10 @@ namespace MetaboliteValidation
             }
 
         }
+
         public Dictionary<string, int> GetHeaderMap()
         {
-            return this._headerInverse;
+            return _headerInverse;
         }
 
         [Obsolete("No longer used")]
@@ -360,12 +372,12 @@ namespace MetaboliteValidation
 
         public int ColumnSize()
         {
-            return this._columnLength;
+            return _columnLength;
         }
 
         public int RowSize()
         {
-            return this._rowLength;
+            return _rowLength;
         }
 
         [Obsolete("Use GetMap instead")]
@@ -392,6 +404,7 @@ namespace MetaboliteValidation
             }
             return true;
         }
+
         /// <summary>This function will append a DelimitedFileParser to the end of this class</summary>
         /// <param name="a">The DelimietedFileParser to add to this class</param>
         //public bool Concat(DelimitedFileParser a)
@@ -413,6 +426,7 @@ namespace MetaboliteValidation
         //    }
         //    return false;
         //}
+
         public bool Concat(DelimitedFileParser a)
         {
             if (CompareHeaders(a.GetHeaders(), _headers))
@@ -528,7 +542,7 @@ namespace MetaboliteValidation
         //                 + row[_headerInverse["cas"]];
         //        foreach (var key in adduct.Keys)
         //        {
-        //            if (!String.IsNullOrEmpty(row[_headerInverse[key]]) && !row[_headerInverse[key]].Equals("N/A"))
+        //            if (!string.IsNullOrEmpty(row[_headerInverse[key]]) && !row[_headerInverse[key]].Equals("N/A"))
         //            {
         //                result += tempStr + "\t" + adduct[key]["polarity"] + "\t" + adduct[key]["display"] + "\t" +
         //                          row[_headerInverse[key]]+"\t\tN2\t\t\n";
@@ -538,11 +552,12 @@ namespace MetaboliteValidation
         //    }
         //    return result;
         //}
+
         public string PrintAgilent()
         {
             var headers = "###Formula\tMass\tCompound name\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n"
                           + "#Formula\tMass\tCpd\tKEGG\tCAS\tPolarity\tIon Species\tCCS\tZ\tGas\tCCS Standard\tNotes\n";
-            string result = headers;
+            var result = headers;
             var adduct = new Dictionary<string, Dictionary<string, string>>()
             {
                 { "mPlusHCCS", new Dictionary<string, string>(){
@@ -571,7 +586,7 @@ namespace MetaboliteValidation
                          + row["cas"];
                 foreach (var key in adduct.Keys)
                 {
-                    if (!String.IsNullOrEmpty(row[key.ToLower()]) && !row[key.ToLower()].Equals("N/A"))
+                    if (!string.IsNullOrEmpty(row[key.ToLower()]) && !row[key.ToLower()].Equals("N/A"))
                     {
                         result += tempStr + "\t" + adduct[key]["polarity"] + "\t" + adduct[key]["display"] + "\t" +
                                   row[key.ToLower()] + "\t\tN2\t\t\n";

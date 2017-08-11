@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using System.IO;
 using Newtonsoft.Json;
@@ -12,16 +10,18 @@ namespace MetaboliteValidation
     public class PubchemUtil
     {
         private const string BaseUrl = "https://pubchem.ncbi.nlm.nih.gov/rest/pug";
+
         public Dictionary<int, Compound> PubChemMap = new Dictionary<int, Compound>();
-        public PubchemUtil(string[] cids)
+
+        public PubchemUtil(IReadOnlyCollection<string> cids)
         {
             var maxEntries = 100;
-            var index = (int)cids.Count() / maxEntries;
-            for (int i = 0; i <= index; i++)
+            var index = cids.Count / maxEntries;
+            for (var i = 0; i <= index; i++)
             {
                 Console.WriteLine("Retrieving mass and formula info from PubChem: {0} / {1}", i + 1, index + 1);
 
-                var splitCids = cids.ToList().GetRange(i* maxEntries, Math.Min(maxEntries, cids.Count() - i* maxEntries));
+                var splitCids = cids.ToList().GetRange(i* maxEntries, Math.Min(maxEntries, cids.Count - i* maxEntries));
 
                 // make request to pubchem website
                 var request = (HttpWebRequest)WebRequest.Create(BaseUrl + "/compound/cid/" + string.Join(",", splitCids) + "/JSON");
@@ -56,10 +56,12 @@ namespace MetaboliteValidation
     {
         public PcCompounds PropertyTable { get; set; }
     }
+
     public class PcCompounds
     {
         public List<Compound> PC_Compounds { get; set; }
     }
+
     public class Compound
     {
         public Id id { get; set; }
@@ -70,20 +72,24 @@ namespace MetaboliteValidation
         public int charge { get; set; }
         public List<Prop> props { get; set; }
         public Dictionary<string, int> count { get; set; }
+
         public Value findProp(string query)
         {
             return props.Where(x => x.urn.label !=null && x.urn.label.Equals(query)|| x.urn.name != null && x.urn.name.Equals(query)).ToList().First().value;
         }
+
         public int getId()
         {
             return id.id["cid"];
         }
     }
+
     public class Prop
     {
         public Urn urn { get;set; }
         public Value value { get; set; }
     }
+
     public class Urn
     {
         public string label { get; set; }
@@ -118,38 +124,53 @@ namespace MetaboliteValidation
         public List<int> aid2 { get; set; }
         public List<int> order { get; set; }
     }
+
     public class Stereo
     {
         public Dictionary<string, int> tetrahedral { get; set; }
     }
+
     public class Coord
     {
         public List<int> type { get; set; }
         public List<int> aid { get; set; }
         public List<Conformer> conformers { get; set; }
     }
+
     public class Conformer
     {
         public List<double> x { get; set; }
         public List<double> y { get; set; }
         public Style style { get; set; }
     }
+
     public class Style
     {
         public List<int> annotation { get; set; }
         public List<int> aid1 { get; set; }
         public List<int> aid2 { get; set; }
     }
+
     public class PropertyTable
     {
         public List<Property> Properties { get; set; }
     }
+
     public class Property
     {
-        public int CID { get; set; }
-        public string MolecularFormula { get; set; }
-        public string InChIKey { get; set; }
-        public float ExactMass { get; set; }
+
+        public int CID { get; }
+        public string MolecularFormula { get; }
+        public string InChIKey { get; }
+        public float ExactMass { get; }
+
+        public Property(int cid, string inChIKey, string molecularFormula, float exactMass)
+        {
+            CID = cid;
+            InChIKey = inChIKey;
+            MolecularFormula = molecularFormula;
+            ExactMass = exactMass;
+        }
 
         protected bool Equals(Property other)
         {
@@ -160,7 +181,7 @@ namespace MetaboliteValidation
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && Equals((Property) obj);
+            return obj.GetType() == GetType() && Equals((Property) obj);
         }
 
         public override int GetHashCode()

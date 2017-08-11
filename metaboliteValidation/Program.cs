@@ -2,14 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Mime;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
-using System.Globalization;
-using System.Net.Http;
-using Newtonsoft.Json;
-using System.Net;
 using System.Reflection;
 using MetaboliteValidation.GithubApi;
 using MetaboliteValidation.GoodTableResponse;
@@ -28,7 +21,9 @@ namespace MetaboliteValidation
         private const string GOOD_TABLES_WARNING_FILE = "GoodTablesApiOutput.txt";
 
         private const string DUPLICATE_ROWS_FILE = "DuplicateRows.tsv";
+
         private const string WARNING_ROWS_FILE = "WarningFile.tsv";
+
         private const string MISSING_KEGG_FILE = "NoKeggFile.tsv";
 
         /// <summary>
@@ -148,14 +143,14 @@ namespace MetaboliteValidation
                 var dataFile = github.GetFile("data/metabolitedata.tsv");
 
                 // parse the new data to append to current data
-                DelimitedFileParser fileToAppend = new DelimitedFileParser();
+                var fileToAppend = new DelimitedFileParser();
                 fileToAppend.ParseFile(options.InputFile, '\t');
 
                 // Update column names if necessary
                 UpdateHeaders(fileToAppend);
 
                 // parse the main data file from github
-                DelimitedFileParser mainFile = new DelimitedFileParser();
+                var mainFile = new DelimitedFileParser();
                 if (dataFile == null)
                 {
                     mainFile.SetDelimiter('\t');
@@ -174,24 +169,24 @@ namespace MetaboliteValidation
                 if (!options.IgnoreErrors)
                 {
                     // get ids for kegg and pubchem
-                    List<string> keggIds = fileToAppend.GetColumnAt("kegg").Where(x => !string.IsNullOrEmpty(x)).ToList();
-                    List<string> cidIds = fileToAppend.GetColumnAt("pubchem cid").Where(x => !string.IsNullOrEmpty(x)).ToList();
-                    List<string> mainCasIds = mainFile.GetColumnAt("cas").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                    var keggIds = fileToAppend.GetColumnAt("kegg").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                    var cidIds = fileToAppend.GetColumnAt("pubchem cid").Where(x => !string.IsNullOrEmpty(x)).ToList();
+                    var mainCasIds = mainFile.GetColumnAt("cas").Where(x => !string.IsNullOrEmpty(x)).ToList();
 
                     // generate pubchem and kegg utils
-                    PubchemUtil pub = new PubchemUtil(cidIds.ToArray());
-                    KeggUtil kegg = new KeggUtil(keggIds.ToArray());
-                    StreamWriter file = new StreamWriter("ValidationApi.txt");
+                    var pub = new PubchemUtil(cidIds.ToArray());
+                    var kegg = new KeggUtil(keggIds.ToArray());
+                    var file = new StreamWriter("ValidationApi.txt");
 
-                    DelimitedFileParser dupRows = new DelimitedFileParser();
+                    var dupRows = new DelimitedFileParser();
                     dupRows.SetHeaders(fileToAppend.GetHeaders());
                     dupRows.SetDelimiter('\t');
 
-                    DelimitedFileParser warningRows = new DelimitedFileParser();
+                    var warningRows = new DelimitedFileParser();
                     warningRows.SetHeaders(fileToAppend.GetHeaders());
                     warningRows.SetDelimiter('\t');
 
-                    DelimitedFileParser missingKegg = new DelimitedFileParser();
+                    var missingKegg = new DelimitedFileParser();
                     missingKegg.SetHeaders(fileToAppend.GetHeaders());
                     missingKegg.SetDelimiter('\t');
 
@@ -235,7 +230,7 @@ namespace MetaboliteValidation
                     {
 
                         Console.WriteLine("Validating data file with GoodTables");
-                        GoodTables goodtables = new GoodTables(fileToAppend.ToString(true), SchemaUrl);
+                        var goodtables = new GoodTables(fileToAppend.ToString(true), SchemaUrl);
                         if (!goodtables.Response.success)
                         {
                             //foreach(var result in goodtables.Response.report.results)
@@ -337,10 +332,11 @@ namespace MetaboliteValidation
 
         private void streamToFile(string fileName, DelimitedFileParser parsedFile)
         {
-            StreamWriter warnFile = new StreamWriter(fileName);
+            var warnFile = new StreamWriter(fileName);
             warnFile.Write(parsedFile.ToString(true));
             warnFile.Close();
         }
+
         public bool CheckRow(Dictionary<string, string> row, Compound pubChem, CompoundData kegg)
         {
             var rowFormula = row["formula"];
@@ -348,9 +344,6 @@ namespace MetaboliteValidation
             var rowMass = (int)double.Parse(row["mass"]);
             var pubFormula = "";
             var pubMass = 0.0;
-            var keggFormula = "";
-            var keggExactMass = 0.0;
-            var keggCas = "";
             if (pubChem != null)
             {
                 pubFormula = pubChem.findProp("Molecular Formula").sval;
@@ -358,9 +351,9 @@ namespace MetaboliteValidation
             }
             if (kegg != null)
             {
-                keggFormula = kegg.Formula;
-                keggExactMass = kegg.ExactMass;
-                keggCas = kegg.OtherId("CAS");
+                var keggFormula = kegg.Formula;
+                var keggExactMass = kegg.ExactMass;
+                var keggCas = kegg.OtherId("CAS");
                 return rowFormula == keggFormula
                     && rowFormula == pubFormula
                     && rowCas == keggCas
@@ -395,7 +388,7 @@ namespace MetaboliteValidation
 
         }
 
-        private void WriteContentToFile(StreamWriter file, Dictionary<string, string> row, Compound pubChem, CompoundData kegg, int rowIndex)
+        private void WriteContentToFile(TextWriter file, IReadOnlyDictionary<string, string> row, Compound pubChem, CompoundData kegg, int rowIndex)
         {
             file.Write(printHead(rowIndex));
             file.Write(printRow(row));
@@ -403,10 +396,12 @@ namespace MetaboliteValidation
             file.Write(printPubChem(pubChem));
             file.Write("\n");
         }
-        private string printRow(Dictionary<string, string> a)
+
+        private string printRow(IReadOnlyDictionary<string, string> a)
         {
             return $"{"Actual",10}{"",10}{(int)double.Parse(a["mass"]),20}{a["formula"],20}{a["cas"],20}\n";
         }
+
         private string printPubChem(Compound p)
         {
             if (p != null)
@@ -415,6 +410,7 @@ namespace MetaboliteValidation
                     $"{p.findProp("Molecular Formula").sval,20}{"No Cas Information",20}\n";
             return "No PubChem\n";
         }
+
         private string printKegg(CompoundData k)
         {
             if (k != null)
@@ -423,6 +419,7 @@ namespace MetaboliteValidation
                     $"{k.Formula,20}{k.OtherId("CAS"),20}\n";
             return "No Kegg\n";
         }
+
         private string printHead(int rowIndex)
         {
             return $"{$"Row {rowIndex}",10}{"ID",10}{"Mass",20}{"Formula",20}{"CAS",20}\n";
@@ -443,9 +440,13 @@ namespace MetaboliteValidation
             Error,
             FileNotFound
         }
+
         public string StandardOut { get; set; }
+
         public string StandardError { get; set; }
+
         public StatusCode Status { get; set; }
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -457,6 +458,7 @@ namespace MetaboliteValidation
             Status = StatusCode.Ok;
             Init(filename, args);
         }
+
         /// <summary>
         /// this function controls the class behavior
         /// </summary>
@@ -465,12 +467,14 @@ namespace MetaboliteValidation
         private void Init(string fileName, string args)
         {
             // create a process
-            Process process = new Process();
+            var process = new Process();
             // apply all required elements for process
-            ProcessStartInfo startInfo = new ProcessStartInfo(fileName, args);
-            startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;
-            startInfo.UseShellExecute = false;
+            var startInfo = new ProcessStartInfo(fileName, args)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
             process.StartInfo = startInfo;
             try
             {

@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MetaboliteValidation.GithubApi
+﻿namespace MetaboliteValidation.GithubApi
 {
-    /**
-    * json parameters for creating a file in a repository on github
-    */
+    /// <summary>
+    /// Json parameters for creating a file in a repository on github
+    /// </summary>
     class CreateFileParams
     {
         public string path { get; set; }

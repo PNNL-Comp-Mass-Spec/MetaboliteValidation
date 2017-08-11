@@ -1,12 +1,9 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace MetaboliteValidation.GoodTableResponse
 {
@@ -24,7 +21,6 @@ namespace MetaboliteValidation.GoodTableResponse
         private void init()
         {
             var goodtableData = new GoodtableData(source,schema);
-            
 
             using (var client = new HttpClient())
             {
@@ -32,7 +28,7 @@ namespace MetaboliteValidation.GoodTableResponse
                 {
                     req.Content = new StringContent(JsonConvert.SerializeObject(goodtableData), Encoding.UTF8);
                     req.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-                    using (HttpResponseMessage resp = client.SendAsync(req).Result)
+                    using (var resp = client.SendAsync(req).Result)
                     {
                         try
                         {

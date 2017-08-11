@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MetaboliteValidation.GithubApi
+﻿namespace MetaboliteValidation.GithubApi
 {
     /**
     * json parameters for updating a file in a repository on github

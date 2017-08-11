@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MetaboliteValidation.GithubApi
+﻿namespace MetaboliteValidation.GithubApi
 {
-    /**
-         * json response from github to get a list of files
-         */
+    /// <summary>
+    /// Json response from github to get a list of files
+    /// </summary>
     class TreeResponse
     {
         public string sha { get; set; }

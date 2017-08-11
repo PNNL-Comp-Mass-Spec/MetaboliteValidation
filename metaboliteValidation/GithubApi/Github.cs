@@ -1,12 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Cache;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
@@ -14,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace MetaboliteValidation.GithubApi
 {
-    /**
-     * <summary>This class is for github api interaction</summary>
-     */
+    /// <summary>
+    /// This class is for github api interaction
+    /// </summary>
     public class Github
     {
         public string Username { get; set; }
@@ -24,7 +20,7 @@ namespace MetaboliteValidation.GithubApi
         public string Repo { get; set; }
         public string Owner { get; set; }
         public string Branch { get; set; }
-        private string githubApiBase = "https://api.github.com";
+        private readonly string githubApiBase = "https://api.github.com";
 
         private bool PreviewMode { get; }
 
@@ -38,12 +34,12 @@ namespace MetaboliteValidation.GithubApi
             Branch = branch;
             PreviewMode = previewMode;
         }
-        /**
-         * <summary>This function will get the file as a string</summary>
-         * <param name="urlBase">The base url for the file</param>
-         * <param name="path">The path to the file</param>
-         * <returns>The contents of the http request</return>
-         */
+
+        /// <summary>
+        /// This function will get the file as a string
+        /// </summary>
+        /// <param name="path">The path to the file</param>
+        /// <returns>The contents of the http request</returns>
         public string GetFile(string path)
         {
             if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
@@ -66,9 +62,10 @@ namespace MetaboliteValidation.GithubApi
             return null;
 
         }
-        /**
-         *  <summary>This function uses the console to collect the username and password for github from the user</summary>
-         */
+
+        /// <summary>
+        /// This function uses the console to collect the username and password for github from the user
+        /// </summary>
         private void GetUserPass()
         {
             if (string.IsNullOrEmpty(Username))
@@ -82,31 +79,35 @@ namespace MetaboliteValidation.GithubApi
                 Console.Write($"Password for {Username}: ");
             }
 
-            IntPtr valuePtr = IntPtr.Zero;
-            valuePtr = Marshal.SecureStringToGlobalAllocUnicode(GetPassword());
+            var valuePtr = Marshal.SecureStringToGlobalAllocUnicode(GetPassword());
             Password = Marshal.PtrToStringUni(valuePtr);
         }
-        /**
-         * <summary>This fucntion uses the console to get the user name for github</summary>
-         */
+
+        /// <summary>
+        /// This fucntion uses the console to get the user name for github
+        /// </summary>
+        /// <returns></returns>
         public string GetUserName()
         {
             return Console.ReadLine();
         }
-        /**
-         * <summary>This function will use the console to get the password to github</summary>
-         */
+
+        /// <summary>
+        /// This function will use the console to get the password to github
+        /// </summary>
+        /// <returns></returns>
         public SecureString GetPassword()
         {
             var pwd = new SecureString();
             while (true)
             {
-                ConsoleKeyInfo i = Console.ReadKey(true);
+                var i = Console.ReadKey(true);
                 if (i.Key == ConsoleKey.Enter)
                 {
                     break;
                 }
-                else if (i.Key == ConsoleKey.Backspace)
+
+                if (i.Key == ConsoleKey.Backspace)
                 {
                     if (pwd.Length > 0)
                     {
@@ -123,23 +124,26 @@ namespace MetaboliteValidation.GithubApi
             Console.Write("\n");
             return pwd;
         }
-        /**
-         * <summary>This function uses the username and password to create the authentication header to send to github</summary>
-         * <returns>The basic athentication header for accessing github</returns>
-         */
+
+        /// <summary>
+        /// This function uses the username and password to create the authentication header to send to GitHub
+        /// </summary>
+        /// <returns>The basic athentication header for accessing GitHub</returns>
         private string AuthHeaders()
         {
             return "Basic " +  Convert.ToBase64String(
                 Encoding.UTF8.GetBytes($"{Username}:{Password}")
                 );
-         }
-        /**
-        * <summary>This function will retrieve the sha of a file if the file exists in github</summary>
-        * <param name="repo">The github repository</param>
-        * <param name="owner">The owner of the github repository</param>
-        * <param name="path">The relative path of the file in the repository</param>
-        * <returns>The sha of the file or null if it don't exist</returns>
-        */
+        }
+
+        /// <summary>
+        /// This function will retrieve the sha of a file if the file exists in github
+        /// </summary>
+        /// <param name="repo">The github repository</param>
+        /// <param name="owner">The owner of the github repository</param>
+        /// <param name="path">The relative path of the file in the repository</param>
+        /// <param name="branch">Optional: branch name</param>
+        /// <returns>The sha of the file or null if it don't exist</returns>
         private string GetSha(string repo, string owner, string path, string branch = "master")
         {
             var fileList = GetFileList(repo, owner, branch);
@@ -149,12 +153,14 @@ namespace MetaboliteValidation.GithubApi
             }
             return null;
         }
-        /**
-         * <summary>This function will get a file list from github</summary>
-         * <param name="repo">The github repository name</param>
-         * <param name="owner">The owner of the github repository</param>
-         * <param name="branch">The branch of the github repository</param>
-         */
+
+        /// <summary>
+        /// This function will get a file list from github
+        /// </summary>
+        /// <param name="repo">The github repository</param>
+        /// <param name="owner">The owner of the github repository</param>
+        /// <param name="branch">Optional: branch name</param>
+        /// <returns></returns>
         private Dictionary<string, FileInfo> GetFileList(string repo, string owner, string branch)
         {
             try
@@ -169,11 +175,12 @@ namespace MetaboliteValidation.GithubApi
             }
             return null;
         }
-        /**
-         * <summary>This function creates a dictionry of the file list from a json string</summary>
-         * <param name="json">The json string representing the file list</param>
-         * <returns>The key is the path to the file, value is the file information provided from github</returns>
-         */
+
+        /// <summary>
+        /// This function creates a dictionary of the file list from a json string
+        /// </summary>
+        /// <param name="json">The json string representing the file list</param>
+        /// <returns>The key is the path to the file, value is the file information provided from github</returns>
         private Dictionary<string, FileInfo> GetFileListFromJson(string json)
         {
             var result = JsonConvert.DeserializeObject<TreeResponse>(json);
@@ -184,35 +191,53 @@ namespace MetaboliteValidation.GithubApi
             }
             return results;
         }
-        /**
-         * <summary>This function creates a Uri for github api contents</summary>
-         */
+
+        /// <summary>
+        /// This function creates a Uri for github api contents
+        /// </summary>
+        /// <param name="repo"></param>
+        /// <param name="owner"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
         private Uri GetUriForContent(string repo, string owner, string path)
         {
             var uriStr = $"{githubApiBase}/repos/{owner}/{repo}/contents/{path}";
             return new Uri(uriStr);
         }
-        /**
-         * <summary>This function creates a Uri for github api blob</summary>
-         */
+
+        /// <summary>
+        /// This function creates a Uri for github api blob
+        /// </summary>
+        /// <param name="repo"></param>
+        /// <param name="owner"></param>
+        /// <param name="sha"></param>
+        /// <returns></returns>
         private Uri GetUriForBlob(string repo, string owner, string sha)
         {
             var uriStr = $"{githubApiBase}/repos/{owner}/{repo}/git/blobs/{sha}";
             return new Uri(uriStr);
         }
-        /**
-         * <summary>This function creates a Uri for github api tree</summary>
-         */
+
+        /// <summary>
+        /// This function creates a Uri for github api tree
+        /// </summary>
+        /// <param name="repo"></param>
+        /// <param name="owner"></param>
+        /// <param name="branch"></param>
+        /// <returns></returns>
         private Uri GetUriForTree(string repo, string owner, string branch = "master")
         {
             var uriStr = $"{githubApiBase}/repos/{owner}/{repo}/git/trees/{branch}?recursive=1";
             return new Uri(uriStr);
         }
-        /**
-         * <summary>This function uploads a file to github and will update the file or create a new one if the file doesn't exist</summary>
-         * <param name="content">The contents of the file to send to github</param>
-         * <param name="path">The relative path for the file in github repository</param>
-         */
+
+        /// <summary>
+        /// This function uploads a file to github and will update the file or create a new one if the file doesn't exist
+        /// </summary>
+        /// <param name="content">The contents of the file to send to github</param>
+        /// <param name="path">The relative path for the file in github repository</param>
+        /// <param name="commitMsg">Commit message</param>
+        /// <param name="branch">Optional: branch</param>
         public void SendFileAsync(string content, string path, string commitMsg = "Updated data", string branch = "master")
         {
             if (PreviewMode)
@@ -241,7 +266,7 @@ namespace MetaboliteValidation.GithubApi
                 return;
             }
 
-            if (String.IsNullOrEmpty(Username) || String.IsNullOrEmpty(Password))
+            if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
             {
                 GetUserPass();
             }
@@ -257,15 +282,16 @@ namespace MetaboliteValidation.GithubApi
                 Console.WriteLine("Error sending file to GitHub: " + ex.Message);
             }
         }
-        /**
-         * <summary>This function collects the upload file parameters required for github and serializes them into a json string</summary>
-         * <param name="content"> The content to send</param>
-         * <param name="sha"> The sha of the file on github</param>
-         * <param name="path"> The path to the file on github</param>
-         * <param name="message"> The commit message</param>
-         * <param name="branch"> The branch of the repository</param>
-         * <returns>Json string of the parameters required by github for updating and creating a file if no sha the file will be created on github</returns>
-         */
+
+        /// <summary>
+        /// This function collects the upload file parameters required for github and serializes them into a json string
+        /// </summary>
+        /// <param name="content">The content to send</param>
+        /// <param name="sha">The sha of the file on github</param>
+        /// <param name="path">The path to the file on github</param>
+        /// <param name="message">The commit message</param>
+        /// <param name="branch">The branch of the repository</param>
+        /// <returns>Json string of the parameters required by github for updating and creating a file if no sha the file will be created on github</returns>
         private StringContent UploadFileParams(string content, string sha, string path, string message, string branch)
         {
             var fileParam  = new CreateFileParams
@@ -288,13 +314,14 @@ namespace MetaboliteValidation.GithubApi
             }
             return new StringContent(JsonConvert.SerializeObject(fileParam),Encoding.UTF8, ApplicationJson);
         }
-        /**
-         * <summary>This function sends a PUT http request with the uri and gets a json string back</summary>
-         * <param name="uri"> The uri for the http call</param>
-         * <param name="content"> The content to send to the uri</param>
-         * <returns>The content of the http response as json string</returns>
-         */
-        private async Task<string> PutJson(Uri uri, StringContent content)
+
+        /// <summary>
+        /// This function sends a PUT http request with the uri and gets a json string back
+        /// </summary>
+        /// <param name="uri">The uri for the http call</param>
+        /// <param name="content">The content to send to the uri</param>
+        /// <returns>The content of the http response as json string</returns>
+        private async Task<string> PutJson(Uri uri, HttpContent content)
         {
             using (var client = new HttpClient())
             {
@@ -304,7 +331,7 @@ namespace MetaboliteValidation.GithubApi
                     req.Headers.Add("Accept", ApplicationJson);
                     client.DefaultRequestHeaders.Add("User-Agent", "Anything");
                     req.Content = content;
-                    using (HttpResponseMessage resp = await client.SendAsync(req))
+                    using (var resp = await client.SendAsync(req))
                     {
                         try
                         {
@@ -326,11 +353,12 @@ namespace MetaboliteValidation.GithubApi
                 }
             }
         }
-        /**
-         * <summary>This function sends a http GET request with the uri and gets a json string back</summary>
-         * <param name="uri">The uri for the http call</param>
-         * <returns>The content of the http response as json string</returns>
-         */
+
+        /// <summary>
+        /// This function sends a http GET request with the uri and gets a json string back
+        /// </summary>
+        /// <param name="uri">The uri for the http call</param>
+        /// <returns>The content of the http response as json string</returns>
         private async Task<string> GetJson(Uri uri)
         {
             using (var client = new HttpClient())
@@ -340,7 +368,7 @@ namespace MetaboliteValidation.GithubApi
                     req.Headers.Add("Authorization", AuthHeaders());
                     req.Headers.Add("Accept", ApplicationJson);
                     client.DefaultRequestHeaders.Add("User-Agent", "Anything");
-                    using (HttpResponseMessage resp = await client.SendAsync(req))
+                    using (var resp = await client.SendAsync(req))
                     {
                         try
                         {

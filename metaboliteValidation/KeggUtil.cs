@@ -1,32 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MetaboliteValidation
 {
     public class KeggUtil
     {
         public List<CompoundData> Compounds = new List<CompoundData>();
-        public Dictionary<string, CompoundData> CompoundsMap { get;set;}
-        public KeggUtil(string[] ids)
+
+        public Dictionary<string, CompoundData> CompoundsMap { get;set; }
+
+        public KeggUtil(IReadOnlyCollection<string> ids)
         {
             CompoundsMap = new Dictionary<string, CompoundData>();
             var maxEntries = 10;
-            var index = (int)ids.Count() / maxEntries;
-            for (int i = 0; i <= index; i++)
+            var index = ids.Count / maxEntries;
+            for (var i = 0; i <= index; i++)
             {
                 Console.WriteLine("Retrieving mass and formula info from Kegg: {0} / {1}", i + 1, index + 1);
 
-                var splitIds = ids.ToList().GetRange(i * maxEntries, Math.Min(maxEntries, ids.Count() - i * maxEntries));
+                var splitIds = ids.ToList().GetRange(i * maxEntries, Math.Min(maxEntries, ids.Count - i * maxEntries));
                 using (var client = new HttpClient())
                 {
-                    using (var req = new HttpRequestMessage(HttpMethod.Get, "http://rest.kegg.jp/get/" + String.Join("+", splitIds)))
+                    using (var req = new HttpRequestMessage(HttpMethod.Get, "http://rest.kegg.jp/get/" + string.Join("+", splitIds)))
                     {
-                        using (HttpResponseMessage resp = client.SendAsync(req).Result)
+                        using (var resp = client.SendAsync(req).Result)
                         {
                             try
                             {
@@ -36,7 +35,7 @@ namespace MetaboliteValidation
                             {
                                 // Ignore errors here
                             }
-                            string[] comps = resp.Content.ReadAsStringAsync().Result.Split(new string[] { "///\n" }, StringSplitOptions.None).Where(x => !string.IsNullOrEmpty(x)).ToArray();
+                            var comps = resp.Content.ReadAsStringAsync().Result.Split(new[] { "///\n" }, StringSplitOptions.None).Where(x => !string.IsNullOrEmpty(x)).ToArray();
                             CompoundsMap = new Dictionary<string, CompoundData>();
                             foreach (var str in comps)
                             {
@@ -48,6 +47,7 @@ namespace MetaboliteValidation
                 toCompoundMap(Compounds);
             }
         }
+
         private void toCompoundMap(List<CompoundData> list)
         {
             foreach (var a in list)
@@ -56,13 +56,14 @@ namespace MetaboliteValidation
                     CompoundsMap.Add(a.KeggId, a);
             }
         }
+
         public CompoundData ReadKeggCompoundStream(string page)
         {
 
             var lines = page.Split('\n');
 
             CompoundData entryData = null;
-            for(var i = 0;i< lines.Length;i++)
+            for(var i = 0; i< lines.Length; i++)
             {
                 var line = lines[i];
                 string[] tokens;
@@ -70,9 +71,14 @@ namespace MetaboliteValidation
                 {
                     //System.Console.WriteLine(line);
                     tokens = line.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                    entryData = new CompoundData(tokens[1]);
-                    entryData.Type = tokens[2];
+                    entryData = new CompoundData(tokens[1]) {
+                        Type = tokens[2]
+                    };
                 }
+
+                if (entryData == null)
+                    continue;
+
                 if (line.ToLower().StartsWith("name"))
                 {
                     tokens = line.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
@@ -84,30 +90,35 @@ namespace MetaboliteValidation
                         line = lines[++i];
                     }
                 }
+
                 if (line != null && line.ToLower().StartsWith("formula"))
                 {
                     tokens = line.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     entryData.Formula = tokens[1];
                     line = lines[++i];
                 }
+
                 if (line != null && line.ToLower().StartsWith("exact_mass"))
                 {
                     tokens = line.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     entryData.ExactMass = double.Parse(tokens[1]);
                     line = lines[++i];
                 }
+
                 if (line != null && line.ToLower().StartsWith("mol_weight"))
                 {
                     tokens = line.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     entryData.MolecularWeight = double.Parse(tokens[1]);
                     line = lines[++i];
                 }
+
                 if (line != null && line.ToLower().StartsWith("comment"))
                 {
                     line = line.Remove(0, 7);
                     entryData.Comment = line.Trim();
                     line = lines[++i];
                 }
+
                 if (line != null && line.ToLower().StartsWith("pathway"))
                 {
                     line = line.Remove(0, 7);
@@ -118,6 +129,7 @@ namespace MetaboliteValidation
                         line = lines[++i];
                     }
                 }
+
                 if (line != null && line.ToLower().StartsWith("dblinks"))
                 {
                     line = line.Remove(0, 7);
@@ -136,17 +148,26 @@ namespace MetaboliteValidation
             return entryData;
         }
     }
+
     public class CompoundData
     {
-        public string KeggId { get; private set; }
+        public string KeggId { get; }
+
         public string Type { get; set; }
-        public List<string> Names { get; private set; }
+
+        public List<string> Names { get; }
+
         public string Formula { get; set; }
+
         public double ExactMass { get; set; }
+
         public double MolecularWeight { get; set; }
+
         public string Comment { get; set; }
-        public List<string> Pathways { get; private set; }
-        public List<KeyValuePair<string, string>> OtherIds { get; private set; }
+
+        public List<string> Pathways { get; }
+
+        public List<KeyValuePair<string, string>> OtherIds { get; }
 
         public CompoundData(string keggId)
         {
@@ -158,6 +179,7 @@ namespace MetaboliteValidation
             Formula = string.Empty;
             Comment = string.Empty;
         }
+
         public string OtherId(string query)
         {
             var keyValuePair = OtherIds.Where(x => x.Key.Equals(query)).ToList().FirstOrDefault();
@@ -165,9 +187,10 @@ namespace MetaboliteValidation
                 return "";
             return keyValuePair.Value;
         }
+
         public override string ToString()
         {
-            return this.KeggId;
+            return KeggId;
         }
     }
 }

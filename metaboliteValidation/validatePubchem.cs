@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace MetaboliteValidation
 {
@@ -12,13 +10,14 @@ namespace MetaboliteValidation
         private readonly Dictionary<int, Property> _pubchem;
         private readonly DelimitedFileParser _parser;
         private readonly List<string> _errorReport = new List<string>();
-        
+
         public ValidatePubchem(Dictionary<int, Property> pubchem, DelimitedFileParser parser)
         {
-            this._pubchem = pubchem;
-            this._parser = parser;
+            _pubchem = pubchem;
+            _parser = parser;
             Validate();
         }
+
         private void Validate()
         {
             var headers = _parser.GetHeaderMap();
@@ -39,13 +38,7 @@ namespace MetaboliteValidation
                     exactMass = float.Parse(a[headers["mass"]]);
                 if (cid != -1)
                 {
-                    var actual = new Property
-                    {
-                        CID = cid,
-                        ExactMass = exactMass,
-                        InChIKey = inchi,
-                        MolecularFormula = formula
-                    };
+                    var actual = new Property(cid, inchi, formula, exactMass);
                     var expected = _pubchem[cid];
                     if (!expected.Equals(actual))
                         AddToError(expected, actual, count);
@@ -69,6 +62,7 @@ namespace MetaboliteValidation
                 .Append("\n");
             _errorReport.Add(builder.ToString());
         }
+
         private void AddToError(Property expecting, Property actual, int row)
         {
             var builder = new StringBuilder();
@@ -82,6 +76,7 @@ namespace MetaboliteValidation
                 .Append($"{"Actual",10}{actual.ExactMass,20}{actual.MolecularFormula,20}{actual.InChIKey,60}\n");
             _errorReport.Add(builder.ToString());
         }
+
         public string PrintError()
         {
             return string.Join("\n", _errorReport.ToArray());
