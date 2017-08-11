@@ -10,24 +10,16 @@ using System.Globalization;
 using System.Net.Http;
 using Newtonsoft.Json;
 using System.Net;
-using NDesk.Options;
+using System.Reflection;
 using MetaboliteValidation.GithubApi;
 using MetaboliteValidation.GoodTableResponse;
+using PRISM;
 
 namespace MetaboliteValidation
 {
     class Program
     {
-        /// <summary>
-        /// This function is to describe the usage for the program
-        /// </summary>
-        /// <param name="programName">The programs name</param>
-        /// <returns>The usage from the program</returns>
-        private static void Usage(string programName, OptionSet options)
-        {
-            Console.Write($"Usage: {programName} [OPTIONS] <filename>\nOptions:\n");
-            options.WriteOptionDescriptions(Console.Out);
-        }
+
         /// <summary>
         /// This is the url for the goodtables schema located on github
         /// </summary>
@@ -38,30 +30,56 @@ namespace MetaboliteValidation
         /// <param name="args">Passed in arguments to the program</param>
         public static void Main(string[] args)
         {
-            bool show_help = false;
-            bool ignore = false;
-            var options = new OptionSet()
+            var asmName = typeof(Program).GetTypeInfo().Assembly.GetName();
+            var exeName = Path.GetFileName(Assembly.GetExecutingAssembly().Location);       // Alternatively: System.AppDomain.CurrentDomain.FriendlyName
+            var version = MetaboliteValidatorOptions.GetAppVersion();
+
+            var parser = new CommandLineParser<MetaboliteValidatorOptions>(asmName.Name, version)
             {
-                { "i|ignore", "Ignore warnings and push data to github", v => ignore = v != null },
-                { "h|help",  "show this message and exit", v => show_help = v != null }
+                ProgramInfo = "This program reads metabolites in a .tsv file and pushes new information " + Environment.NewLine +
+                              "to the git respository at https://github.com/PNNL-Comp-Mass-Spec/MetabolomicsCCS",
+
+                ContactInfo = "Program written by Ryan Wilson and Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2017" +
+                              Environment.NewLine + Environment.NewLine +
+                              "E-mail: ryan.wilson@pnnl.gov or proteomics@pnnl.gov" + Environment.NewLine +
+                              "Website: http://panomics.pnnl.gov/ or http://omics.pnl.gov or http://www.sysbio.org/resources/staff/",
+
+                UsageExamples = {
+                    exeName + "NewMetabolites.tsv",
+                    exeName + "NewMetabolites.tsv -i",
+                    exeName + "NewMetabolites.tsv -preview",
+                    exeName + "NewMetabolites.tsv -user MyUsername -password *Dfw3gf"
+                }
             };
-            List<string> extra;
+
+            var parseResults = parser.ParseArgs(args);
+            var options = parseResults.ParsedResults;
+
             try
             {
-                extra = options.Parse(args);
+                if (!parseResults.Success)
+                {
+                    System.Threading.Thread.Sleep(1500);
+                    return -1;
+                }
+
+                if (!options.ValidateArgs())
+                {
+                    parser.PrintHelp();
+                    System.Threading.Thread.Sleep(1500);
+                    return -1;
+                }
+
+                options.OutputSetOptions();
+
             }
-            catch (OptionException e)
+            catch (Exception e)
             {
-                Console.Write($"{System.AppDomain.CurrentDomain.FriendlyName}: ");
+                Console.WriteLine();
+                Console.Write($"Error running {exeName}");
                 Console.WriteLine(e.Message);
-                Console.WriteLine($"Try `{System.AppDomain.CurrentDomain.FriendlyName} --help' for more information.");
-                return;
-            }
-            // check args
-            if (extra.Count != 1||show_help)
-            {
-                Usage(System.AppDomain.CurrentDomain.FriendlyName, options);
-                return;
+                Console.WriteLine($"See help with {exeName} --help");
+                return -1;
             }
             new Program(extra.ToArray(), ignore);
             // exit program
