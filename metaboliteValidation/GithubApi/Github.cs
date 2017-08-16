@@ -240,13 +240,18 @@ namespace MetaboliteValidation.GithubApi
         /// <param name="branch">Optional: branch</param>
         public void SendFileAsync(string content, string path, string commitMsg = "Updated data", string branch = "master")
         {
+            const int ROWS_TO_PREVIEW = 5;
+
             if (PreviewMode)
             {
                 Console.WriteLine();
-                Console.WriteLine("Preview of data to push to GitHub");
+                Console.WriteLine("Preview of data to push to {0} on GitHub", path);
 
-                var contentRows = content.Split(new[] {'\r', '\n'}, 10);
+                var contentRows = content.Split('\r', '\n');
 
+                Console.WriteLine("Displaying {0} / {1} total rows", ROWS_TO_PREVIEW, contentRows.Length);
+
+                // Show the first 5 rows
                 var rowsPreviewed = 0;
                 foreach (var dataRow in contentRows)
                 {
@@ -259,7 +264,7 @@ namespace MetaboliteValidation.GithubApi
                         Console.WriteLine(dataRow.Substring(0, 77) + " ...");
 
                     rowsPreviewed++;
-                    if (rowsPreviewed >= 5)
+                    if (rowsPreviewed >= ROWS_TO_PREVIEW)
                         break;
                 }
 

@@ -27,6 +27,12 @@ namespace MetaboliteValidation
         private const string MISSING_KEGG_FILE = "NoKeggFile.tsv";
 
         /// <summary>
+        /// Name of the master metabolite file on GitHub
+        /// </summary>
+        /// <remarks>Resides at https://github.com/PNNL-Comp-Mass-Spec/MetabolomicsCCS/blob/master/data/metabolitedata.tsv </remarks>
+        private const string MASTER_TSV_FILE = "metabolitedata.tsv";
+
+        /// <summary>
         /// The main function to run the program
         /// </summary>
         /// <param name="args">Passed in arguments to the program</param>
@@ -140,11 +146,14 @@ namespace MetaboliteValidation
                 }
 
                 // get main data file from github
-                var dataFile = github.GetFile("data/metabolitedata.tsv");
+                var dataFile = github.GetFile("data/" + MASTER_TSV_FILE);
 
                 // parse the new data to append to current data
                 var fileToAppend = new DelimitedFileParser();
                 fileToAppend.ParseFile(options.InputFile, '\t');
+
+                Console.WriteLine();
+                Console.WriteLine("Found {0} records in local file {1}", fileToAppend.Count(), options.InputFile);
 
                 // Update column names if necessary
                 UpdateHeaders(fileToAppend);
@@ -159,6 +168,10 @@ namespace MetaboliteValidation
                 else
                 {
                     mainFile.ParseString(dataFile, '\t');
+
+                    Console.WriteLine();
+                    Console.WriteLine("Found {0} records in file {1} retrieved from GitHub", mainFile.Count(), MASTER_TSV_FILE);
+                    Console.WriteLine();
                 }
 
                 // Update column names if necessary
@@ -312,7 +325,7 @@ namespace MetaboliteValidation
                     //    Console.WriteLine($"GoodTables validation\n\n{pro.StandardOut}");
                     //
                     // This will send the completed tsv back to github
-                    github.SendFileAsync(mainFile.ToString(true), "data/metabolitedata.tsv");
+                    github.SendFileAsync(mainFile.ToString(true), "data/" + MASTER_TSV_FILE);
 
                     // send Agilent file to github
                     github.SendFileAsync(mainFile.PrintAgilent(), "data/metabolitedataAgilent.tsv");
