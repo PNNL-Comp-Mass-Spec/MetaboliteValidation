@@ -7,6 +7,7 @@ using System.Reflection;
 using MetaboliteValidation.GithubApi;
 using MetaboliteValidation.GoodTableResponse;
 using PRISM;
+using FileInfo = System.IO.FileInfo;
 
 namespace MetaboliteValidation
 {
@@ -90,7 +91,6 @@ namespace MetaboliteValidation
                 return -1;
             }
 
-
             var program = new Program(parseResults.ParsedResults);
 
             System.Threading.Thread.Sleep(1500);
@@ -124,6 +124,22 @@ namespace MetaboliteValidation
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(options.InputFile))
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Error, input file not defined");
+                    return false;
+                }
+
+                var inputFile = new FileInfo(options.InputFile);
+
+                if (!inputFile.Exists)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Error, input file not found: " + inputFile.FullName);
+                    return false;
+                }
+
                 // init github api interaction with the repo and owner
                 var github = new Github("MetabolomicsCCS", "PNNL-Comp-Mass-Spec", options.Preview);
 
@@ -150,10 +166,10 @@ namespace MetaboliteValidation
 
                 // parse the new data to append to current data
                 var fileToAppend = new DelimitedFileParser();
-                fileToAppend.ParseFile(options.InputFile, '\t');
+                fileToAppend.ParseFile(inputFile.FullName, '\t');
 
                 Console.WriteLine();
-                Console.WriteLine("Found {0} records in local file {1}", fileToAppend.Count(), options.InputFile);
+                Console.WriteLine("Found {0} records in local file {1}", fileToAppend.Count(), inputFile.Name);
 
                 // Update column names if necessary
                 UpdateHeaders(fileToAppend);
