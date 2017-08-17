@@ -54,10 +54,10 @@ namespace MetaboliteValidation
                               "Website: http://panomics.pnnl.gov/ or http://omics.pnl.gov or http://www.sysbio.org/resources/staff/",
 
                 UsageExamples = {
-                    exeName + "NewMetabolites.tsv",
-                    exeName + "NewMetabolites.tsv -i",
-                    exeName + "NewMetabolites.tsv -preview",
-                    exeName + "NewMetabolites.tsv -user MyUsername -password *Dfw3gf"
+                    exeName + " NewMetabolites.tsv",
+                    exeName + " NewMetabolites.tsv -i",
+                    exeName + " NewMetabolites.tsv -preview",
+                    exeName + " NewMetabolites.tsv -user MyUsername -password *Dfw3gf"
                 }
             };
 

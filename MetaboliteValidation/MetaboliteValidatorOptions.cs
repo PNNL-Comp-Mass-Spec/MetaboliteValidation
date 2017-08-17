@@ -7,7 +7,7 @@ namespace MetaboliteValidation
 {
     class MetaboliteValidatorOptions
     {
-        private const string PROGRAM_DATE = "August 11, 2017";
+        private const string PROGRAM_DATE = "August 17, 2017";
 
         public MetaboliteValidatorOptions()
         {
