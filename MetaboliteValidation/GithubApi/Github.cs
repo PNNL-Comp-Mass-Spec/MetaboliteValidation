@@ -68,15 +68,17 @@ namespace MetaboliteValidation.GithubApi
         /// </summary>
         private void GetUserPass()
         {
+            Console.WriteLine();
+
             if (string.IsNullOrEmpty(Username))
             {
-                Console.Write("Username: ");
+                Console.Write("GitHub username: ");
                 Username = GetUserName();
                 Console.Write("Password: ");
             }
             else
             {
-                Console.Write($"Password for {Username}: ");
+                Console.Write($"Github password for {Username}: ");
             }
 
             var valuePtr = Marshal.SecureStringToGlobalAllocUnicode(GetPassword());
