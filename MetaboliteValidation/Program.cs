@@ -15,7 +15,7 @@ namespace MetaboliteValidation
     {
 
         /// <summary>
-        /// This is the url for the goodtables schema located on github
+        /// This is the url for the GoodTables schema located on github
         /// </summary>
         private const string SchemaUrl = "https://raw.githubusercontent.com/PNNL-Comp-Mass-Spec/MetabolomicsCCS/master/metabolitedata-schema.json";
 
@@ -46,7 +46,7 @@ namespace MetaboliteValidation
             var parser = new CommandLineParser<MetaboliteValidatorOptions>(asmName.Name, version)
             {
                 ProgramInfo = "This program reads metabolites in a .tsv file and pushes new information " + Environment.NewLine +
-                              "to the git respository at https://github.com/PNNL-Comp-Mass-Spec/MetabolomicsCCS",
+                              "to the git repository at https://github.com/PNNL-Comp-Mass-Spec/MetabolomicsCCS",
 
                 ContactInfo = "Program written by Ryan Wilson and Matthew Monroe for the Department of Energy (PNNL, Richland, WA) in 2017" +
                               Environment.NewLine + Environment.NewLine +
@@ -197,12 +197,12 @@ namespace MetaboliteValidation
 
                 if (!options.IgnoreErrors)
                 {
-                    // get ids for kegg and pubchem
+                    // Get ids for Kegg and PubChem
                     var keggIds = fileToAppend.GetColumnAt("kegg").Where(x => !string.IsNullOrEmpty(x)).ToList();
                     var cidIds = fileToAppend.GetColumnAt("pubchem cid").Where(x => !string.IsNullOrEmpty(x)).ToList();
                     var mainCasIds = mainFile.GetColumnAt("cas").Where(x => !string.IsNullOrEmpty(x)).ToList();
 
-                    // generate pubchem and kegg utils
+                    // generate PubChem and Kegg utils
                     var pub = new PubchemUtil(cidIds.ToArray());
                     var kegg = new KeggUtil(keggIds.ToArray());
                     var file = new StreamWriter("ValidationApi.txt");
@@ -237,7 +237,7 @@ namespace MetaboliteValidation
                         }
                         else
                         {
-                            if (k == null && CheckRow(dataMap[i], p, k))
+                            if (k == null && CheckRow(dataMap[i], p, null))
                             {
                                 missingKegg.Add(dataMap[i]);
                             }
@@ -259,15 +259,15 @@ namespace MetaboliteValidation
                     {
 
                         Console.WriteLine("Validating data file with GoodTables");
-                        var goodtables = new GoodTables(fileToAppend.ToString(true), SchemaUrl);
-                        if (!goodtables.Response.success)
+                        var goodTables = new GoodTables(fileToAppend.ToString(true), SchemaUrl);
+                        if (!goodTables.Response.success)
                         {
-                            //foreach(var result in goodtables.Response.report.results)
+                            //foreach(var result in goodTables.Response.report.results)
                             //{
                             //    fileToAppend.Remove(result["0"].result_context[0]);
                             //}
 
-                            goodtables.OutputResponse(new StreamWriter(GOOD_TABLES_WARNING_FILE));
+                            goodTables.OutputResponse(new StreamWriter(GOOD_TABLES_WARNING_FILE));
 
                             Console.WriteLine();
                             Console.WriteLine("GoodTables reports errors; see " + GOOD_TABLES_WARNING_FILE);
@@ -314,12 +314,12 @@ namespace MetaboliteValidation
                         return false;
                     }
 
-                    // start command line process for goodtables
+                    // Start command line process for GoodTables
                     //
-                    // string userDirPath = Environment.GetEnvironmentVariable("goodtables_path");
+                    // string userDirPath = Environment.GetEnvironmentVariable("GOODTABLES_PATH");
                     // string commandLine = $"schema \"{options.InputFile}\" --schema \"{SchemaUrl}\"";
-                    // string goodtablesPath = $"{userDirPath}\\goodtables";
-                    //CommandLineProcess pro = new CommandLineProcess(goodtablesPath, commandLine);
+                    // string GoodTablesPath = $"{userDirPath}\\GoodTables";
+                    //CommandLineProcess pro = new CommandLineProcess(GoodTablesPath, commandLine);
                     //// if error display errors and exit
                     //if (pro.Status.Equals(CommandLineProcess.StatusCode.Error))
                     //{
@@ -327,11 +327,11 @@ namespace MetaboliteValidation
                     //    Console.ReadKey();
                     //    Environment.Exit(1);
                     //}
-                    //// if the goodtables.exe file isn't found display message and exit
+                    //// if the GoodTables.exe file isn't found display message and exit
                     //else if (pro.Status.Equals(CommandLineProcess.StatusCode.FileNotFound))
                     //{
-                    //    Console.WriteLine("File not found. Please make sure you have installed python and goodtables.\n"
-                    //        +"Check that the folder path for goodtables.exe is added to an environment variable named GOODTABLES_PATH.\n"
+                    //    Console.WriteLine("File not found. Please make sure you have installed python and GoodTables.\n"
+                    //        +"Check that the folder path for GoodTables.exe is added to an environment variable named GOODTABLES_PATH.\n"
                     //        +"Press any key to continue.");
                     //    Console.ReadKey();
                     //    Environment.Exit(1);
@@ -354,7 +354,7 @@ namespace MetaboliteValidation
             {
                 Console.WriteLine();
                 Console.WriteLine("Error processing data: " + ex.Message);
-                Console.WriteLine(clsStackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
+                Console.WriteLine(StackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
                 return false;
             }
         }
@@ -518,7 +518,7 @@ namespace MetaboliteValidation
             catch (Exception ex)
             {
                 Console.WriteLine("Error starting the process: " + ex.Message);
-                Console.WriteLine(clsStackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
+                Console.WriteLine(StackTraceFormatter.GetExceptionStackTraceMultiLine(ex));
 
                 // exception from process starting
                 Status = StatusCode.FileNotFound;
