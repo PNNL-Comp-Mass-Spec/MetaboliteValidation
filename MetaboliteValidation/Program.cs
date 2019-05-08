@@ -91,20 +91,9 @@ namespace MetaboliteValidation
                 return -1;
             }
 
-            var program = new Program(parseResults.ParsedResults);
+            var program = new Program();
 
-            System.Threading.Thread.Sleep(1500);
-
-            return 0;
-        }
-
-        /// <summary>
-        /// Construnctor
-        /// </summary>
-        /// <param name="options">Processing options</param>
-        public Program(MetaboliteValidatorOptions options)
-        {
-            var success = ProcessMetabolites(options);
+            var success = program.ProcessMetabolites(options);
 
             Console.WriteLine();
 
@@ -113,6 +102,17 @@ namespace MetaboliteValidation
             else
                 Console.WriteLine("Processing failed");
 
+
+            System.Threading.Thread.Sleep(1500);
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public Program()
+        {
         }
 
         /// <summary>
