@@ -7,7 +7,7 @@ namespace MetaboliteValidation
 {
     class MetaboliteValidatorOptions
     {
-        private const string PROGRAM_DATE = "August 17, 2017";
+        private const string PROGRAM_DATE = "May 8, 2019";
 
         public MetaboliteValidatorOptions()
         {
@@ -94,14 +94,15 @@ namespace MetaboliteValidation
 
         }
 
-        public bool ValidateArgs()
+        public bool ValidateArgs(out string errorMessage)
         {
             if (string.IsNullOrWhiteSpace(InputFile))
             {
-                Console.WriteLine("You must specify an input file");
+                errorMessage = "You must specify an input file";
                 return false;
             }
 
+            errorMessage = string.Empty;
             return true;
         }
 
