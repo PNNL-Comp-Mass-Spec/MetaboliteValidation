@@ -17,5 +17,5 @@ A unit test project for [MetaboliteValidation](https://github.com/PNNL-Comp-Mass
 ## License
 
 The Metabolite Validation program is licensed under the Apache License, Version 2.0;
-you may not use this file except in compliance with the License.  You may obtain
+you may not use this program except in compliance with the License.  You may obtain
 a copy of the License at https://opensource.org/licenses/Apache-2.0
