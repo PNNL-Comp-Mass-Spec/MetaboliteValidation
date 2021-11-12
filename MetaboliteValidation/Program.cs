@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using MetaboliteValidation.GithubApi;
 using MetaboliteValidation.GoodTableResponse;
 using PRISM;
@@ -15,7 +16,7 @@ namespace MetaboliteValidation
     {
 
         /// <summary>
-        /// This is the url for the GoodTables schema located on github
+        /// This is the URL for the GoodTables schema located on GitHub
         /// </summary>
         private const string SchemaUrl = "https://raw.githubusercontent.com/PNNL-Comp-Mass-Spec/MetabolomicsCCS/master/metabolitedata-schema.json";
 
@@ -61,14 +62,20 @@ namespace MetaboliteValidation
                 }
             };
 
-            var parseResults = parser.ParseArgs(args);
-            var options = parseResults.ParsedResults;
+            var result = parser.ParseArgs(args);
+            var options = result.ParsedResults;
 
             try
             {
-                if (!parseResults.Success)
+                if (!result.Success)
                 {
-                    System.Threading.Thread.Sleep(1500);
+                    if (parser.CreateParamFileProvided)
+                    {
+                        return 0;
+                    }
+
+                    // Delay for 1500 msec in case the user double clicked this file from within Windows Explorer (or started the program via a shortcut)
+                    Thread.Sleep(1500);
                     return -1;
                 }
 
@@ -80,7 +87,7 @@ namespace MetaboliteValidation
                     ConsoleMsgUtils.ShowWarning("Validation error:");
                     ConsoleMsgUtils.ShowWarning(errorMessage);
 
-                    System.Threading.Thread.Sleep(1500);
+                    Thread.Sleep(1500);
                     return -1;
                 }
 
